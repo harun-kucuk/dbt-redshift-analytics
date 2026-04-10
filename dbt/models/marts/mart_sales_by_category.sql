@@ -1,7 +1,6 @@
 select
     sale_year,
-    sale_quarter,
-    sale_month,
+    sale_week,
     category_group,
     category_name,
     count(distinct sale_id)     as total_sales,
@@ -11,4 +10,4 @@ select
     sum(net_revenue)            as net_revenue,
     avg(price_paid)             as avg_sale_value
 from {{ ref('fct_sales') }}
-group by 1, 2, 3, 4, 5
+group by 1, 2, 3, 4
