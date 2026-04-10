@@ -17,6 +17,9 @@ jobs:
         working-directory: dbt
 
     steps:
+      - name: Intentional failure (Slack alert test — remove after verification)
+        run: exit 1
+
       - uses: actions/checkout@v4
 
       - uses: actions/setup-python@v5
