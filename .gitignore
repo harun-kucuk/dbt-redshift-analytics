@@ -1,0 +1,14 @@
+# Secrets & credentials
+.env
+*.pem
+*.key
+
+# Terraform state (managed in S3)
+terraform/terraform.tfstate
+terraform/terraform.tfstate.backup
+terraform/.terraform/
+
+# dbt
+dbt/target/
+dbt/dbt_packages/
+dbt/logs/

@@ -1,0 +1,14 @@
+version: 2
+
+sources:
+  - name: tickit
+    database: sample_data_dev
+    schema: tickit
+    tables:
+      - name: sales
+      - name: users
+      - name: event
+      - name: venue
+      - name: listing
+      - name: category
+      - name: date

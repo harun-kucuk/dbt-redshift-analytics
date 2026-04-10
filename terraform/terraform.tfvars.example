@@ -1,0 +1,6 @@
+aws_region     = "us-east-1"
+namespace_name = "analytics"
+workgroup_name = "analytics"
+db_name        = "analytics"
+admin_username = "admin"
+admin_password = "ChangeMe123!"   # min 8 chars, upper+lower+number+symbol
