@@ -12,7 +12,30 @@ with base as (
 
 select
     {{ dbt_utils.generate_surrogate_key(['sale_id']) }} as fct_sale_sk,  -- noqa
-    base.*
+    sale_id,
+    event_id,
+    buyer_id,
+    seller_id,
+    listing_id,
+    quantity_sold,
+    price_paid,
+    commission,
+    commission_rate,
+    net_revenue,
+    category_group,
+    sale_at,
+    sale_date,
+    sale_year,
+    sale_week,
+    is_holiday,
+    event_name,
+    event_start_at,
+    category_id,
+    category_name,
+    venue_id,
+    venue_name,
+    venue_city,
+    venue_seats
 from base
 
 {% if is_incremental() %}
