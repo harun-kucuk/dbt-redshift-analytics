@@ -14,13 +14,16 @@ models:
           - unique
           - not_null
       - name: sale_id
+        data_type: integer
         tests:
           - unique
           - not_null
       - name: event_id
+        data_type: integer
         tests:
           - not_null
       - name: buyer_id
+        data_type: integer
         tests:
           - not_null
           - relationships:
@@ -28,6 +31,7 @@ models:
                 to: ref('dim_users')
                 field: user_id
       - name: seller_id
+        data_type: integer
         tests:
           - not_null
           - relationships:
@@ -35,18 +39,63 @@ models:
                 to: ref('dim_users')
                 field: user_id
       - name: price_paid
+        data_type: numeric
         tests:
           - not_null
           - is_positive
       - name: net_revenue
+        data_type: numeric
         tests:
           - not_null
           - is_positive
       - name: category_group
+        data_type: varchar
         tests:
           - accepted_values:
               arguments:
                 values: ['Sports', 'Shows', 'Concerts']
+      - name: listing_id
+        data_type: integer
+      - name: quantity_sold
+        data_type: smallint
+      - name: commission
+        data_type: numeric
+      - name: commission_rate
+        data_type: numeric
+      - name: sale_at
+        data_type: timestamp
+      - name: sale_date
+        data_type: date
+      - name: sale_year
+        data_type: smallint
+      - name: sale_quarter
+        data_type: varchar
+      - name: sale_month
+        data_type: varchar
+      - name: sale_week
+        data_type: smallint
+      - name: sale_day
+        data_type: varchar
+      - name: is_holiday
+        data_type: boolean
+      - name: event_name
+        data_type: varchar
+      - name: event_start_at
+        data_type: timestamp
+      - name: category_id
+        data_type: smallint
+      - name: category_name
+        data_type: varchar
+      - name: venue_id
+        data_type: smallint
+      - name: venue_name
+        data_type: varchar
+      - name: venue_city
+        data_type: varchar
+      - name: venue_state
+        data_type: varchar
+      - name: venue_seats
+        data_type: integer
 
   - name: dim_users
     config:
