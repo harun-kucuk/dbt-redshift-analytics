@@ -104,7 +104,7 @@ All DAGs send a Slack alert on failure via `SLACK_WEBHOOK_URL` env var (graceful
 
 `dbt-cd` and `terraform-cd` post a Slack alert on failure showing the failed step, branch, commit, and a direct link to the run.
 
-![Slack failure alert](docs/images/slack-alert.png)
+![Slack failure alert](docs/images/slack_alert.png)
 
 ## Infrastructure
 
