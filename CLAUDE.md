@@ -53,6 +53,13 @@ docker compose exec airflow-scheduler airflow dags trigger tickit_dbt_daily
 docker compose down                             # stop all services
 ```
 
+## Git Workflow
+
+- **Never commit directly to `main`** — always create a feature branch first
+- Branch naming: `feature/<short-description>` (e.g. `feature/add-venue-model`, `feature/fix-incremental-logic`)
+- One PR per logical change; keep PRs focused
+- Commit the fix before opening the PR; push the branch then open with `gh pr create`
+
 ## Key Files
 - `dbt/dbt_project.yml` — layer materializations and schema assignments
 - `dbt/macros/generate_schema_name.sql` — exact schema names, `pr_<N>_` prefix in CI
