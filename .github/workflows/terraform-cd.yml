@@ -37,6 +37,7 @@ jobs:
 
       - name: Notify Slack on failure
         if: failure()
+        working-directory: ${{ github.workspace }}
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: |
