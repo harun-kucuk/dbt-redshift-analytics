@@ -20,13 +20,31 @@ jobs:
     steps:
       - name: Drop PR schemas
         run: |
-          PR_NUMBER=${{ github.event.pull_request.number }}
-          aws redshift-data execute-statement \
-            --workgroup-name analytics \
-            --database dev \
-            --sql "
-              DROP SCHEMA IF EXISTS pr_${PR_NUMBER}_staging_tickit CASCADE;
-              DROP SCHEMA IF EXISTS pr_${PR_NUMBER}_intermediate CASCADE;
-              DROP SCHEMA IF EXISTS pr_${PR_NUMBER}_marts CASCADE;
-            " \
-            --region eu-west-2
+          PR=${{ github.event.pull_request.number }}
+          WORKGROUP="analytics"
+          DB="dev"
+          REGION="eu-west-2"
+
+          drop_schema() {
+            SCHEMA=$1
+            echo "Dropping schema: $SCHEMA"
+            ID=$(aws redshift-data execute-statement \
+              --workgroup-name $WORKGROUP \
+              --database $DB \
+              --sql "DROP SCHEMA IF EXISTS ${SCHEMA} CASCADE" \
+              --region $REGION \
+              --query 'Id' --output text)
+
+            # Wait for statement to complete
+            for i in $(seq 1 10); do
+              STATUS=$(aws redshift-data describe-statement --id $ID --region $REGION --query 'Status' --output text)
+              echo "  status: $STATUS"
+              [ "$STATUS" = "FINISHED" ] && break
+              [ "$STATUS" = "FAILED" ] && echo "  ERROR: $(aws redshift-data describe-statement --id $ID --region $REGION --query 'Error' --output text)" && break
+              sleep 3
+            done
+          }
+
+          drop_schema "pr_${PR}_staging_tickit"
+          drop_schema "pr_${PR}_intermediate"
+          drop_schema "pr_${PR}_marts"
