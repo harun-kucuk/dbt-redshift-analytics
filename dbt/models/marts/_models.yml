@@ -121,6 +121,42 @@ models:
           - type: not_null
         tests:
           - not_null
+      - name: first_name
+        data_type: varchar
+      - name: last_name
+        data_type: varchar
+      - name: username
+        data_type: varchar
+      - name: city
+        data_type: varchar
+      - name: state
+        data_type: varchar
+      - name: likes_sports
+        data_type: boolean
+      - name: likes_theatre
+        data_type: boolean
+      - name: likes_concerts
+        data_type: boolean
+      - name: likes_broadway
+        data_type: boolean
+      - name: likes_musicals
+        data_type: boolean
+      - name: total_sales
+        data_type: bigint
+      - name: total_earned
+        data_type: numeric
+      - name: total_listings
+        data_type: bigint
+      - name: total_listed_value
+        data_type: numeric
+      - name: avg_ticket_price
+        data_type: numeric
+      - name: avg_order_value
+        data_type: numeric
+      - name: first_purchase_at
+        data_type: timestamp
+      - name: last_purchase_at
+        data_type: timestamp
 
   - name: mart_sales_by_category
     columns:
