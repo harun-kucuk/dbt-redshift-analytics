@@ -102,6 +102,10 @@ All DAGs send a Slack alert on failure via `SLACK_WEBHOOK_URL` env var (graceful
 | `terraform-cd` | Merge to `main` on `terraform/**` | `terraform apply` |
 | `pr-cleanup` | PR closed | Drops `pr_<N>_*` schemas from dev DB |
 
+`dbt-cd` and `terraform-cd` post a Slack alert on failure showing the failed step, branch, commit, and a direct link to the run.
+
+![Slack failure alert](docs/images/slack-alert.png)
+
 ## Infrastructure
 
 Managed by Terraform in `terraform/`. Schemas defined in `terraform/schemas.csv`.
