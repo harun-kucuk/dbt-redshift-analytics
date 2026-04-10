@@ -3,6 +3,10 @@ version: 2
 models:
   - name: fct_sales
     columns:
+      - name: fct_sale_sk
+        tests:
+          - unique
+          - not_null
       - name: sale_id
         tests:
           - unique

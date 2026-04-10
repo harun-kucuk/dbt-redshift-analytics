@@ -26,6 +26,9 @@ jobs:
       - name: Install dbt
         run: pip install dbt-redshift
 
+      - name: dbt deps
+        run: dbt deps
+
       - name: dbt Run
         env:
           DBT_PASSWORD: ${{ secrets.DBT_PASSWORD }}
