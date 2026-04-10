@@ -1,0 +1,39 @@
+name: dbt-ci
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "dbt/**"
+
+jobs:
+  dbt-ci:
+    name: dbt Run & Test (dev db, PR schemas)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: dbt
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dbt
+        run: pip install dbt-redshift
+
+      - name: dbt Run
+        env:
+          DBT_PASSWORD: ${{ secrets.DBT_PASSWORD }}
+          DBT_PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: dbt run --profiles-dir . --target ci --full-refresh
+
+      - name: dbt Test
+        env:
+          DBT_PASSWORD: ${{ secrets.DBT_PASSWORD }}
+          DBT_PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: dbt test --profiles-dir . --target ci
