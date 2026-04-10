@@ -92,6 +92,8 @@ sample_data_dev.tickit  (Redshift built-in sample)
 
 All DAGs send a Slack alert on failure via `SLACK_WEBHOOK_URL` env var (gracefully skipped if not set).
 
+![Airflow task graph](docs/images/airflow_failure.png)
+
 ![Airflow Slack alert](docs/images/slack_airflow.png)
 
 ## CI/CD
