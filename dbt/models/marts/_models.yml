@@ -1,0 +1,67 @@
+version: 2
+
+models:
+  - name: fct_sales
+    columns:
+      - name: sale_id
+        tests:
+          - unique
+          - not_null
+      - name: event_id
+        tests:
+          - not_null
+      - name: buyer_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_users')
+                field: user_id
+      - name: seller_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_users')
+                field: user_id
+      - name: price_paid
+        tests:
+          - not_null
+          - is_positive
+      - name: net_revenue
+        tests:
+          - not_null
+          - is_positive
+      - name: category_group
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['Sports', 'Shows', 'Concerts']
+
+  - name: dim_users
+    columns:
+      - name: user_id
+        tests:
+          - unique
+          - not_null
+      - name: total_purchases
+        tests:
+          - not_null
+      - name: total_spent
+        tests:
+          - not_null
+
+  - name: mart_sales_by_category
+    columns:
+      - name: category_name
+        tests:
+          - not_null
+      - name: sale_year
+        tests:
+          - not_null
+      - name: gross_revenue
+        tests:
+          - not_null
+      - name: net_revenue
+        tests:
+          - not_null
