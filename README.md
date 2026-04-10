@@ -80,23 +80,6 @@ sample_data_dev.tickit  (Redshift built-in sample)
 |---|---|---|
 | `users_snapshot` | `check` (all columns) | SCD Type 2 — tracks changes to user preferences over time |
 
-## Senior DE Patterns
-
-This repo is structured as a realistic senior data engineering portfolio. Key patterns used:
-
-| Pattern | Where |
-|---|---|
-| **Incremental model** with 1-day overlap for late-arriving rows | `fct_sales.sql` |
-| **dbt contracts** (`contract: enforced: true`) on key models | `marts/_models.yml` |
-| **Surrogate key** via `dbt_utils.generate_surrogate_key` | `fct_sales.sql` |
-| **SCD Type 2** snapshot on user preferences | `snapshots/users_snapshot.sql` |
-| **SQL linting** with SQLFluff in CI | `.sqlfluff`, `dbt-ci.yml` |
-| **PR-isolated schemas** (`pr_<N>_*`) in dev | `generate_schema_name.sql`, `dbt-ci.yml` |
-| **Slack failure callbacks** on every Airflow task | `airflow/dags/common.py` |
-| **Architecture Decision Records** (ADRs) | `docs/decisions/` |
-| **Operational runbook** | `docs/runbook.md` |
-| **Makefile** as single entrypoint for all tools | `Makefile` |
-
 ## Airflow DAGs
 
 | DAG | Schedule | Description |
