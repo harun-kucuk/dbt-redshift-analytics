@@ -25,7 +25,7 @@ jobs:
 
       - name: Install dbt
         id: install
-        run: pip install dbt-redshift
+        run: pip install dbt-redshift==1.10.1
 
       - name: dbt deps
         id: deps
@@ -41,7 +41,7 @@ jobs:
         id: dbt_test
         env:
           DBT_PASSWORD: ${{ secrets.DBT_PASSWORD }}
-        run: exit 1  # intentional failure — remove after Slack verified
+        run: dbt test --profiles-dir .
 
       - name: Notify Slack on failure
         if: failure()

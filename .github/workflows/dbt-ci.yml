@@ -23,7 +23,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install SQLFluff
-        run: pip install sqlfluff
+        run: pip install sqlfluff==3.3.1
 
       - name: Lint SQL
         run: sqlfluff lint models macros tests --dialect ansi
@@ -46,7 +46,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install dbt
-        run: pip install dbt-redshift
+        run: pip install dbt-redshift==1.10.1
 
       - name: dbt deps
         run: dbt deps

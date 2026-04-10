@@ -141,15 +141,12 @@ Then update `DBT_PASSWORD` in:
 ### Security group — allow a new IP
 
 ```bash
-aws ec2 authorize-security-group-ingress \
-  --group-id <sg-id> \
-  --protocol tcp --port 5439 \
-  --cidr <your-ip>/32 \
-  --region eu-west-2
+cd terraform
+# add your new IP/CIDR to allowed_cidr_blocks in terraform.tfvars
+terraform apply
 ```
 
-Do **not** manage this in Terraform — the security group has
-`lifecycle { ignore_changes = [ingress] }` intentionally.
+Prefer Terraform-managed changes so the allowlist stays auditable and reproducible.
 
 ---
 

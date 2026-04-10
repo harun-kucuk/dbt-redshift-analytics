@@ -8,7 +8,7 @@ Orchestrates the dbt pipeline using [Astronomer Cosmos](https://astronomer.githu
 |---|---|
 | Apache Airflow | 2.10.4 |
 | astronomer-cosmos | 1.14.0 |
-| dbt-redshift | 1.10.0 (isolated virtualenv) |
+| dbt-redshift | 1.10.1 (isolated virtualenv) |
 | Metadata DB | PostgreSQL 15 |
 
 ## DAGs
@@ -91,7 +91,7 @@ docker-compose.yml
 Dockerfile
 ├── apache/airflow:2.10.4-python3.11  (base)
 ├── astronomer-cosmos 1.14.0          (Airflow Python env)
-└── dbt-redshift 1.10.0               (isolated /opt/airflow/dbt-venv)
+└── dbt-redshift 1.10.1               (isolated /opt/airflow/dbt-venv)
 
 Volumes
 └── ../dbt  →  /opt/airflow/dbt       (live mount — manifest + models)

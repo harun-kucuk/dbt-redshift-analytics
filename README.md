@@ -7,11 +7,11 @@ A portfolio analytics project using **dbt**, **AWS Redshift Serverless**, **Terr
 | Tool | Purpose |
 |---|---|
 | AWS Redshift Serverless | Cloud data warehouse (8 RPU, eu-west-2) |
-| dbt-redshift 1.10 | Data transformation |
+| dbt-redshift 1.10.1 | Data transformation |
 | dbt_utils 1.x | Surrogate key generation (`generate_surrogate_key`) |
 | Terraform | Infrastructure as code |
 | Apache Airflow 2.10 + Cosmos 1.14 | Pipeline orchestration |
-| SQLFluff | SQL linting (jinja templater, ansi dialect) |
+| SQLFluff 3.3.1 | SQL linting (jinja templater, ansi dialect) |
 | S3 | Terraform remote state |
 | GitHub Actions | CI/CD for dbt and Terraform |
 
@@ -121,7 +121,7 @@ AWS
 ├── Redshift Serverless
 │   ├── Namespace: analytics
 │   └── Workgroup: analytics (8 RPU, eu-west-2)
-├── Security Group: port 5439
+├── Security Group: public endpoint with CIDR allowlist
 └── S3: terraform remote state
 ```
 
@@ -134,6 +134,8 @@ See [ADR 003](docs/decisions/003-redshift-serverless-over-provisioned.md) for wh
 ```bash
 cd terraform
 export TF_VAR_admin_password="<password>"
+cp terraform.tfvars.example terraform.tfvars
+# set allowed_cidr_blocks to your public IP/CIDR before apply
 terraform init
 terraform apply
 ```

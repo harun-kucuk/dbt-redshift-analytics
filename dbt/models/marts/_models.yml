@@ -68,14 +68,8 @@ models:
         data_type: date
       - name: sale_year
         data_type: smallint
-      - name: sale_quarter
-        data_type: char
-      - name: sale_month
-        data_type: char
       - name: sale_week
         data_type: smallint
-      - name: sale_day
-        data_type: char
       - name: is_holiday
         data_type: boolean
       - name: event_name
@@ -92,8 +86,6 @@ models:
         data_type: varchar
       - name: venue_city
         data_type: varchar
-      - name: venue_state
-        data_type: char
       - name: venue_seats
         data_type: integer
 
@@ -125,12 +117,8 @@ models:
         data_type: varchar
       - name: last_name
         data_type: varchar
-      - name: username
-        data_type: char
       - name: city
         data_type: varchar
-      - name: state
-        data_type: char
       - name: likes_sports
         data_type: boolean
       - name: likes_theatre

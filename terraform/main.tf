@@ -11,24 +11,22 @@ data "aws_subnets" "default" {
   }
 }
 
-# --- Security group: allow Redshift port publicly (password + SSL enforced) ---
+# --- Security group: public endpoint, restricted by CIDR allowlist ---
 
 resource "aws_security_group" "redshift_serverless" {
   name        = "${var.workgroup_name}-redshift-sg"
   description = "Allow Redshift Serverless access"
   vpc_id      = data.aws_vpc.default.id
 
-  # Ignore manual ingress rules added outside Terraform (e.g. your laptop IP)
-  lifecycle {
-    ignore_changes = [ingress]
-  }
-
-  ingress {
-    description = "Redshift port - public (CI/CD + local access)"
-    from_port   = 5439
-    to_port     = 5439
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+  dynamic "ingress" {
+    for_each = toset(var.allowed_cidr_blocks)
+    content {
+      description = "Redshift port - allowlisted client access"
+      from_port   = 5439
+      to_port     = 5439
+      protocol    = "tcp"
+      cidr_blocks = [ingress.value]
+    }
   }
 
   egress {
@@ -65,7 +63,8 @@ resource "aws_redshiftserverless_workgroup" "this" {
   subnet_ids         = data.aws_subnets.default.ids
   security_group_ids = [aws_security_group.redshift_serverless.id]
 
-  # Make the endpoint publicly accessible so dbt can reach it from your laptop.
+  # Keep the endpoint public for local development and CI, but limit network
+  # access to the configured CIDR allowlist above.
   publicly_accessible = true
 
   tags = {
