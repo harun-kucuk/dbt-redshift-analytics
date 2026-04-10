@@ -17,9 +17,6 @@ jobs:
         working-directory: dbt
 
     steps:
-      - name: Intentional failure (test)
-        run: exit 1
-
       - uses: actions/checkout@v4
 
       - uses: actions/setup-python@v5
@@ -63,7 +60,7 @@ jobs:
               "fields": [
                 {"title": "Branch",       "value": os.environ["BRANCH"],     "short": True},
                 {"title": "Triggered by", "value": os.environ["ACTOR"],      "short": True},
-                {"title": "Commit",       "value": f"<{os.environ['COMMIT_URL']}|{os.environ['COMMIT_SHA'][:7]}> {os.environ['COMMIT_MSG']}", "short": False},
+                {"title": "Commit",       "value": f"<{os.environ['COMMIT_URL']}|{os.environ['COMMIT_SHA'][:7]}> {os.environ['COMMIT_MSG'].splitlines()[0]}", "short": False},
               ],
               "actions": [{"type": "button", "text": "View run", "url": os.environ["RUN_URL"]}]
             }]
