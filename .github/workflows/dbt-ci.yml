@@ -1,0 +1,35 @@
+name: dbt-ci
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "dbt/**"
+
+jobs:
+  dbt-ci:
+    name: dbt Compile & Test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: dbt
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dbt
+        run: pip install dbt-redshift
+
+      - name: dbt Compile
+        env:
+          DBT_PASSWORD: ${{ secrets.DBT_PASSWORD }}
+        run: dbt compile --profiles-dir .
+
+      - name: dbt Test
+        env:
+          DBT_PASSWORD: ${{ secrets.DBT_PASSWORD }}
+        run: dbt test --profiles-dir .
