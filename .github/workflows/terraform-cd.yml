@@ -30,9 +30,11 @@ jobs:
           terraform_version: "~1.5"
 
       - name: Terraform Init
+        id: tf_init
         run: terraform init
 
       - name: Terraform Apply
+        id: tf_apply
         run: terraform apply -auto-approve
 
       - name: Notify Slack on failure
@@ -46,17 +48,27 @@ jobs:
           COMMIT_MSG: ${{ github.event.head_commit.message }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           COMMIT_URL: ${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}
+          STEP_INIT: ${{ steps.tf_init.outcome }}
+          STEP_APPLY: ${{ steps.tf_apply.outcome }}
         run: |
           python3 - <<'EOF'
           import json, os, urllib.request
+
+          steps = {
+            "Terraform Init":  os.environ["STEP_INIT"],
+            "Terraform Apply": os.environ["STEP_APPLY"],
+          }
+          failed_step = next((name for name, outcome in steps.items() if outcome == "failure"), "unknown")
+
           payload = {
             "attachments": [{
               "color": "danger",
               "title": ":x: terraform-cd failed",
               "fields": [
-                {"title": "Branch",       "value": os.environ["BRANCH"],     "short": True},
+                {"title": "Failed step",  "value": failed_step,              "short": True},
                 {"title": "Triggered by", "value": os.environ["ACTOR"],      "short": True},
-                {"title": "Commit",       "value": f"<{os.environ['COMMIT_URL']}|{os.environ['COMMIT_SHA'][:7]}> {os.environ['COMMIT_MSG'].splitlines()[0]}", "short": False},
+                {"title": "Branch",       "value": os.environ["BRANCH"],     "short": True},
+                {"title": "Commit",       "value": f"<{os.environ['COMMIT_URL']}|{os.environ['COMMIT_SHA'][:7]}> {os.environ['COMMIT_MSG'].splitlines()[0]}", "short": True},
               ],
               "actions": [{"type": "button", "text": "View run", "url": os.environ["RUN_URL"]}]
             }]
