@@ -41,15 +41,20 @@ def slack_failure_callback(context: dict) -> None:
     task_id = context["task_instance"].task_id
     run_id = context["run_id"]
     log_url = context["task_instance"].log_url
+    owner = context["dag"].owner
 
     payload = {
-        "text": (
-            f":red_circle: *dbt task failed*\n"
-            f"*DAG*: `{dag_id}`\n"
-            f"*Task*: `{task_id}`\n"
-            f"*Run*: `{run_id}`\n"
-            f"<{log_url}|View logs>"
-        )
+        "attachments": [{
+            "color": "danger",
+            "title": ":x: dbt task failed",
+            "fields": [
+                {"title": "DAG",          "value": dag_id,  "short": True},
+                {"title": "Failed task",  "value": task_id, "short": True},
+                {"title": "Owner",        "value": owner,   "short": True},
+                {"title": "Run ID",       "value": run_id,  "short": True},
+            ],
+            "actions": [{"type": "button", "text": "View logs", "url": log_url}],
+        }]
     }
 
     req = urllib.request.Request(
