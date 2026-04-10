@@ -1,2 +1,4 @@
-astronomer-cosmos[dbt-redshift]==1.9.0
-apache-airflow-providers-amazon==9.4.0
+# Airflow-specific dependencies — dbt-redshift is in its own virtualenv, NOT here.
+# cosmos 1.14.x supports Airflow 2.10+ and dbt 1.5–1.10.
+astronomer-cosmos==1.14.0
+apache-airflow-providers-amazon
