@@ -2,8 +2,14 @@ version: 2
 
 models:
   - name: fct_sales
+    config:
+      contract:
+        enforced: true
     columns:
       - name: fct_sale_sk
+        data_type: varchar
+        constraints:
+          - type: not_null
         tests:
           - unique
           - not_null
@@ -43,15 +49,27 @@ models:
                 values: ['Sports', 'Shows', 'Concerts']
 
   - name: dim_users
+    config:
+      contract:
+        enforced: true
     columns:
       - name: user_id
+        data_type: integer
+        constraints:
+          - type: not_null
         tests:
           - unique
           - not_null
       - name: total_purchases
+        data_type: bigint
+        constraints:
+          - type: not_null
         tests:
           - not_null
       - name: total_spent
+        data_type: numeric
+        constraints:
+          - type: not_null
         tests:
           - not_null
 
