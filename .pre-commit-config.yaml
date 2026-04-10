@@ -12,6 +12,3 @@ repos:
     hooks:
       - id: sqlfluff-lint
         args: [--dialect, ansi]
-        additional_dependencies:
-          - dbt-redshift
-          - dbt-core

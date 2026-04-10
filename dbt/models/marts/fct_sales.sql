@@ -3,6 +3,6 @@ with base as (
 )
 
 select
-    {{ dbt_utils.generate_surrogate_key(['sale_id']) }} as fct_sale_sk,
+    {{ dbt_utils.generate_surrogate_key(['sale_id']) }} as fct_sale_sk,  -- noqa
     base.*
 from base
