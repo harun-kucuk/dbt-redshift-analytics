@@ -8,7 +8,7 @@ on:
 
 jobs:
   dbt-ci:
-    name: dbt Compile & Test
+    name: dbt Compile & Test (PR schema)
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -24,12 +24,14 @@ jobs:
       - name: Install dbt
         run: pip install dbt-redshift
 
-      - name: dbt Compile
+      - name: dbt Run (PR isolated schemas)
         env:
           DBT_PASSWORD: ${{ secrets.DBT_PASSWORD }}
-        run: dbt compile --profiles-dir .
+          DBT_PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: dbt run --profiles-dir .
 
       - name: dbt Test
         env:
           DBT_PASSWORD: ${{ secrets.DBT_PASSWORD }}
+          DBT_PR_NUMBER: ${{ github.event.pull_request.number }}
         run: dbt test --profiles-dir .

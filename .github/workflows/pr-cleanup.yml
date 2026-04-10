@@ -1,0 +1,30 @@
+name: pr-cleanup
+
+on:
+  pull_request:
+    branches: [main]
+    types: [closed]
+
+jobs:
+  drop-pr-schemas:
+    name: Drop PR schemas
+    runs-on: ubuntu-latest
+
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: eu-west-2
+
+    steps:
+      - name: Drop PR schemas
+        run: |
+          PR_NUMBER=${{ github.event.pull_request.number }}
+          aws redshift-data execute-statement \
+            --workgroup-name analytics \
+            --database analytics \
+            --sql "
+              DROP SCHEMA IF EXISTS pr_${PR_NUMBER}_staging_tickit CASCADE;
+              DROP SCHEMA IF EXISTS pr_${PR_NUMBER}_intermediate CASCADE;
+              DROP SCHEMA IF EXISTS pr_${PR_NUMBER}_marts CASCADE;
+            " \
+            --region eu-west-2
