@@ -12,3 +12,15 @@ analytics:
       threads: 4
       connect_timeout: 30
       sslmode: require
+
+    ci:
+      type: redshift
+      host: analytics.725960317874.eu-west-2.redshift-serverless.amazonaws.com
+      port: 5439
+      user: admin
+      password: "{{ env_var('DBT_PASSWORD') }}"
+      dbname: dev
+      schema: public
+      threads: 4
+      connect_timeout: 30
+      sslmode: require

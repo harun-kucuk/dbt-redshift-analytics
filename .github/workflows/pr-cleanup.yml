@@ -21,7 +21,7 @@ jobs:
           PR_NUMBER=${{ github.event.pull_request.number }}
           aws redshift-data execute-statement \
             --workgroup-name analytics \
-            --database analytics \
+            --database dev \
             --sql "
               DROP SCHEMA IF EXISTS pr_${PR_NUMBER}_staging_tickit CASCADE;
               DROP SCHEMA IF EXISTS pr_${PR_NUMBER}_intermediate CASCADE;
