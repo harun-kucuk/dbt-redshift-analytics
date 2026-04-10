@@ -1,0 +1,44 @@
+[sqlfluff]
+dialect = ansi
+templater = dbt
+runaway_limit = 10
+max_line_length = 120
+indent_unit = space
+
+# Exclude rules that conflict with intentional patterns in this project:
+# AM04 - select * is used deliberately in staging and fct passthrough
+# AM05 - select * in CTEs is fine
+# RF05 - unquoted identifiers: Redshift accepts all lowercase unquoted
+exclude_rules = AM04, AM05, RF05
+
+[sqlfluff:indentation]
+indent_tabs = false
+tab_space_size = 4
+indented_joins = false
+indented_using_on = true
+
+[sqlfluff:rules:capitalisation.keywords]
+capitalisation_policy = lower
+
+[sqlfluff:rules:capitalisation.identifiers]
+extended_capitalisation_policy = lower
+
+[sqlfluff:rules:capitalisation.functions]
+extended_capitalisation_policy = lower
+
+[sqlfluff:rules:capitalisation.literals]
+capitalisation_policy = lower
+
+[sqlfluff:rules:capitalisation.types]
+extended_capitalisation_policy = lower
+
+[sqlfluff:rules:aliasing.table]
+aliasing = explicit
+
+[sqlfluff:rules:aliasing.column]
+aliasing = explicit
+
+[sqlfluff:templater:dbt]
+project_dir = ./dbt
+profiles_dir = ./dbt
+target = prod

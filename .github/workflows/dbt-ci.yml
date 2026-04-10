@@ -7,9 +7,28 @@ on:
       - "dbt/**"
 
 jobs:
+  sqlfluff:
+    name: SQLFluff Lint
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install SQLFluff
+        run: pip install sqlfluff sqlfluff-templater-dbt dbt-redshift
+
+      - name: Lint SQL
+        run: sqlfluff lint dbt/models dbt/macros dbt/tests --dialect ansi
+
   dbt-ci:
     name: dbt Run & Test (dev db, PR schemas)
     runs-on: ubuntu-latest
+    needs: sqlfluff
     permissions:
       contents: read
     defaults:
