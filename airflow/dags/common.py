@@ -8,6 +8,7 @@ repeating them in every DAG file.
 from __future__ import annotations
 
 import os
+from datetime import timedelta
 from pathlib import Path
 
 from airflow.hooks.base import BaseHook
@@ -46,7 +47,7 @@ def slack_failure_callback(context: dict) -> None:
     payload = {
         "attachments": [{
             "color": "danger",
-            "title": ":x: dbt task failed",
+            "title": ":x: Airflow | dbt task failed",
             "fields": [
                 {"title": "DAG",          "value": dag_id,  "short": True},
                 {"title": "Failed task",  "value": task_id, "short": True},
@@ -93,7 +94,7 @@ operator_args = {
 default_args = {
     "owner": "data-engineering",
     "retries": 2,
-    "retry_delay_seconds": 30,
+    "retry_delay": timedelta(seconds=30),
     "email_on_failure": False,
     "on_failure_callback": slack_failure_callback,
 }

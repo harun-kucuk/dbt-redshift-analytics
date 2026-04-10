@@ -18,6 +18,7 @@ x-airflow-common: &airflow-common
     DBT_PASSWORD: ${DBT_PASSWORD}
     REDSHIFT_HOST: ${REDSHIFT_HOST}
     REDSHIFT_USER: ${REDSHIFT_USER}
+    SLACK_WEBHOOK_URL: ${SLACK_WEBHOOK_URL:-}
   volumes:
     - ./dags:/opt/airflow/dags
     - ./logs:/opt/airflow/logs
