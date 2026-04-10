@@ -200,6 +200,7 @@ make lint-fix    # auto-correct where possible
 | [001](docs/decisions/001-late-binding-views-for-staging.md) | Late-binding views for staging layer |
 | [002](docs/decisions/002-cosmos-over-bash-operator.md) | Astronomer Cosmos over BashOperator for dbt orchestration |
 | [003](docs/decisions/003-redshift-serverless-over-provisioned.md) | Redshift Serverless over provisioned cluster |
+| [004](docs/decisions/004-incremental-strategy-fct-sales.md) | Incremental strategy and overlap window for fct_sales |
 
 ## Runbook
 
