@@ -12,12 +12,8 @@ snapshot-paths: ["snapshots"]
 target-path: "target"
 clean-targets: ["target", "dbt_packages"]
 
-dispatch:
-  - macro_namespace: dbt_artifacts
-    search_order: ['analytics', 'dbt_artifacts']
-
 on-run-end:
-  - "{% if target.name == 'prod' %}{{ dbt_artifacts.upload_results(results) }}{% endif %}"
+  - "{% if target.name == 'prod' %}{{ store_run_results(results) }}{% endif %}"
 
 models:
   analytics:
@@ -31,6 +27,3 @@ models:
     marts:
       +schema: marts
       +materialized: table
-  dbt_artifacts:
-    +schema: dbt_artifacts
-    +materialized: table
