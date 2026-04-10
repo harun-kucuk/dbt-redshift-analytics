@@ -10,6 +10,8 @@ jobs:
   dbt-cd:
     name: dbt Run
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     defaults:
       run:
         working-directory: dbt
