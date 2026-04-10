@@ -1,0 +1,56 @@
+version: 2
+
+models:
+  - name: int_sales_enriched
+    description: >
+      Sales transactions enriched with event, category, venue, and date
+      dimension attributes. One row per sale. Used as the source for all
+      sales-related mart models.
+    columns:
+      - name: sale_id
+        tests:
+          - unique
+          - not_null
+      - name: event_id
+        tests:
+          - not_null
+      - name: buyer_id
+        tests:
+          - not_null
+      - name: seller_id
+        tests:
+          - not_null
+      - name: price_paid
+        tests:
+          - not_null
+          - is_positive
+      - name: net_revenue
+        tests:
+          - not_null
+          - is_positive
+      - name: commission_rate
+        tests:
+          - not_null
+
+  - name: int_user_stats
+    description: >
+      Per-user aggregated purchase, sales, and listing statistics joined with
+      user profile attributes. One row per user. Used as the source for
+      dim_users and mart_user_segments.
+    columns:
+      - name: user_id
+        tests:
+          - unique
+          - not_null
+      - name: username
+        tests:
+          - not_null
+      - name: total_purchases
+        tests:
+          - not_null
+      - name: total_spent
+        tests:
+          - not_null
+      - name: total_listings
+        tests:
+          - not_null

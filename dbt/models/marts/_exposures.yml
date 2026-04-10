@@ -1,0 +1,30 @@
+version: 2
+
+exposures:
+  - name: sales_analytics_dashboard
+    type: dashboard
+    maturity: medium
+    description: >
+      Executive dashboard covering ticket sales performance, revenue trends,
+      and top-performing events. Refreshed daily after the dbt production run.
+    depends_on:
+      - ref('fct_sales')
+      - ref('mart_top_events')
+      - ref('mart_venue_performance')
+      - ref('mart_user_segments')
+    owner:
+      name: Analytics Team
+      email: analytics@example.com
+
+  - name: user_segmentation_report
+    type: ml
+    maturity: low
+    description: >
+      Downstream ML pipeline that uses buyer/seller/interest segments to
+      generate personalised event recommendations.
+    depends_on:
+      - ref('mart_user_segments')
+      - ref('dim_users')
+    owner:
+      name: Data Science Team
+      email: datascience@example.com
