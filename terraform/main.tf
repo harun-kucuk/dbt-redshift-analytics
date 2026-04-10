@@ -11,7 +11,7 @@ data "aws_subnets" "default" {
   }
 }
 
-# --- Security group: allow Redshift port from within VPC ---
+# --- Security group: allow Redshift port publicly (password + SSL enforced) ---
 
 resource "aws_security_group" "redshift_serverless" {
   name        = "${var.workgroup_name}-redshift-sg"
@@ -24,11 +24,11 @@ resource "aws_security_group" "redshift_serverless" {
   }
 
   ingress {
-    description = "Redshift port from VPC"
+    description = "Redshift port - public (CI/CD + local access)"
     from_port   = 5439
     to_port     = 5439
     protocol    = "tcp"
-    cidr_blocks = [data.aws_vpc.default.cidr_block]
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
