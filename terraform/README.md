@@ -8,7 +8,7 @@ Provisions all AWS infrastructure for the analytics platform.
 |---|---|
 | Redshift Serverless Namespace | `analytics`, database `analytics`, admin user `admin` |
 | Redshift Serverless Workgroup | `analytics`, 8 RPU, publicly accessible |
-| Security Group | Port 5439 open; laptop IPs added manually via CLI |
+| Security Group | Port 5439 restricted to `allowed_cidr_blocks` |
 | Redshift Schemas | Driven by `schemas.csv` — created via `aws redshift-data execute-statement` |
 | S3 Backend | `redshift-infra-terraform-state-725960` in `eu-west-2` |
 
@@ -35,7 +35,7 @@ Never hardcode schema names in `.tf` files.
 | `schemas.tf` | Reads `schemas.csv` and creates schemas via AWS CLI |
 | `schemas.csv` | Source of truth for schema names and databases |
 | `variables.tf` | All input variables with descriptions and defaults |
-| `terraform.tfvars` | Non-sensitive variable values (committed) |
+| `terraform.tfvars` | Non-sensitive variable values, including CIDR allowlist |
 | `versions.tf` | S3 backend, AWS and null provider version pins |
 | `outputs.tf` | Workgroup endpoint and ARN |
 
@@ -49,6 +49,9 @@ Never hardcode schema names in `.tf` files.
 
 ```bash
 cd terraform
+cp terraform.tfvars.example terraform.tfvars
+
+# Update allowed_cidr_blocks with your public IP/CIDR before apply
 
 # First time
 terraform init
@@ -65,5 +68,5 @@ terraform init -upgrade
 
 ## Notes
 
-- The security group uses `lifecycle { ignore_changes = [ingress] }` — laptop IPs are added manually via CLI and must not be managed by Terraform
+- Keep `allowed_cidr_blocks` narrow. Avoid `0.0.0.0/0` outside short-lived demos.
 - Never commit `terraform.tfstate` or `terraform.tfstate.backup` — state is stored in S3

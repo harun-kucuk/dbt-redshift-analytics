@@ -1,7 +1,7 @@
 variable "aws_region" {
   description = "AWS region to deploy resources"
   type        = string
-  default     = "us-east-1"
+  default     = "eu-west-2"
 }
 
 variable "namespace_name" {
@@ -32,4 +32,10 @@ variable "admin_password" {
   description = "Admin password"
   type        = string
   sensitive   = true
+}
+
+variable "allowed_cidr_blocks" {
+  description = "CIDR blocks allowed to connect to the public Redshift endpoint"
+  type        = list(string)
+  default     = []
 }

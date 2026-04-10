@@ -12,4 +12,4 @@ RUN pip install --no-cache-dir -r /requirements.txt
 # don't exist and it fails. Using python -m virtualenv creates them correctly.
 RUN python -m virtualenv /opt/airflow/dbt-venv && \
     /opt/airflow/dbt-venv/bin/pip install --upgrade pip wheel setuptools && \
-    /opt/airflow/dbt-venv/bin/pip install --no-cache-dir dbt-redshift==1.10.0
+    /opt/airflow/dbt-venv/bin/pip install --no-cache-dir dbt-redshift==1.10.1

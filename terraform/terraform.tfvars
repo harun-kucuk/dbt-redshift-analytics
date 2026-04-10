@@ -3,3 +3,4 @@ namespace_name = "analytics"
 workgroup_name = "analytics"
 db_name        = "analytics"
 admin_username = "admin"
+allowed_cidr_blocks = []
