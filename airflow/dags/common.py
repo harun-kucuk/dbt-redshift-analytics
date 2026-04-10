@@ -7,8 +7,11 @@ repeating them in every DAG file.
 """
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
+from airflow.hooks.base import BaseHook
+from airflow.operators.bash import BashOperator  # noqa: F401 — re-exported for adhoc DAG
 from cosmos import ExecutionConfig, ProfileConfig, ProjectConfig
 from cosmos.constants import ExecutionMode, InvocationMode
 from cosmos.profiles import RedshiftUserPasswordProfileMapping
@@ -17,6 +20,45 @@ DBT_PROJECT_PATH = Path("/opt/airflow/dbt")
 DBT_VENV_PATH = Path("/opt/airflow/dbt-venv")
 DBT_EXECUTABLE_PATH = DBT_VENV_PATH / "bin" / "dbt"
 DBT_MANIFEST_PATH = DBT_PROJECT_PATH / "target" / "manifest.json"
+
+
+def slack_failure_callback(context: dict) -> None:
+    """Post a failure notification to Slack.
+
+    Reads SLACK_WEBHOOK_URL from the environment (or an Airflow Variable).
+    Silently skips if the variable is not configured so local/dev runs
+    don't require a Slack workspace.
+    """
+    import urllib.request
+    import json
+
+    webhook_url = os.environ.get("SLACK_WEBHOOK_URL", "")
+    if not webhook_url:
+        print("SLACK_WEBHOOK_URL not set — skipping failure notification")
+        return
+
+    dag_id = context["dag"].dag_id
+    task_id = context["task_instance"].task_id
+    run_id = context["run_id"]
+    log_url = context["task_instance"].log_url
+
+    payload = {
+        "text": (
+            f":red_circle: *dbt task failed*\n"
+            f"*DAG*: `{dag_id}`\n"
+            f"*Task*: `{task_id}`\n"
+            f"*Run*: `{run_id}`\n"
+            f"<{log_url}|View logs>"
+        )
+    }
+
+    req = urllib.request.Request(
+        webhook_url,
+        data=json.dumps(payload).encode("utf-8"),
+        headers={"Content-Type": "application/json"},
+    )
+    urllib.request.urlopen(req, timeout=10)
+
 
 profile_config = ProfileConfig(
     profile_name="analytics",
@@ -48,6 +90,7 @@ default_args = {
     "retries": 2,
     "retry_delay_seconds": 30,
     "email_on_failure": False,
+    "on_failure_callback": slack_failure_callback,
 }
 
 project_config = ProjectConfig(
