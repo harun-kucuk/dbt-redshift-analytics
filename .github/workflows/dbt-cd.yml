@@ -41,7 +41,7 @@ jobs:
         id: dbt_test
         env:
           DBT_PASSWORD: ${{ secrets.DBT_PASSWORD }}
-        run: dbt test --profiles-dir .
+        run: exit 1  # intentional failure — remove after Slack verified
 
       - name: Notify Slack on failure
         if: failure()
