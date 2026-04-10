@@ -12,6 +12,9 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    defaults:
+      run:
+        working-directory: dbt
     steps:
       - uses: actions/checkout@v4
 
@@ -19,11 +22,14 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install SQLFluff
+      - name: Install SQLFluff + dbt
         run: pip install sqlfluff sqlfluff-templater-dbt dbt-redshift
 
+      - name: dbt deps
+        run: dbt deps
+
       - name: Lint SQL
-        run: sqlfluff lint dbt/models dbt/macros dbt/tests --dialect ansi
+        run: sqlfluff lint models macros tests --dialect ansi
 
   dbt-ci:
     name: dbt Run & Test (dev db, PR schemas)
@@ -44,6 +50,9 @@ jobs:
 
       - name: Install dbt
         run: pip install dbt-redshift
+
+      - name: dbt deps
+        run: dbt deps
 
       - name: dbt Run
         env:
