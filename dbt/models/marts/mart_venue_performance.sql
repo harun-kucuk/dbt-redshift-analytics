@@ -11,4 +11,5 @@ select
     avg(net_revenue)                    as avg_sale_revenue,
     {{ safe_divide('sum(quantity_sold)', 'sum(venue_seats)') }} as avg_seat_fill_rate
 from {{ ref('int_sales_enriched') }}
+where venue_id is not null
 group by 1, 2, 3, 4, 5
