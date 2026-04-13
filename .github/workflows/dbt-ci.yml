@@ -85,7 +85,7 @@ jobs:
             --target ci \
             --defer \
             --state state/prod \
-            --select state:modified+1 | tee /tmp/dbt_modified_nodes_ci.txt
+            --select @state:modified | tee /tmp/dbt_modified_nodes_ci.txt
           if [ -s /tmp/dbt_modified_nodes_ci.txt ]; then
             echo "found=true" >> "$GITHUB_OUTPUT"
           else
@@ -103,11 +103,11 @@ jobs:
             --target ci \
             --defer \
             --state state/prod \
-            --select state:modified+1
+            --select @state:modified
 
       - name: No modified nodes
         if: steps.download_manifest.outputs.found == 'true' && steps.modified_nodes.outputs.found != 'true'
-        run: echo "No modified dbt nodes detected by state:modified+1."
+        run: echo "No modified dbt nodes detected by @state:modified."
 
       - name: dbt Build Full Graph
         if: steps.download_manifest.outputs.found != 'true'

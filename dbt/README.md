@@ -107,6 +107,25 @@ dbt snapshot                       # run snapshots
 dbt docs generate && dbt docs serve
 ```
 
+## CI Behavior
+
+GitHub Actions uses the latest production `manifest.json` from S3 to keep pull request runs focused and fast.
+
+- CI downloads `s3://<dbt_state_bucket>/artifacts/prod/manifest.json`
+- PR runs use `--defer --state state/prod --select @state:modified`
+- CI schemas are prefixed as `ci_pr_<N>_...`
+- when no prior manifest exists, workflows fall back to a full `dbt build`
+
+Example CI schema names:
+
+```text
+ci_pr_9_staging_tickit
+ci_pr_9_intermediate
+ci_pr_9_marts
+```
+
+This approach keeps PR runs isolated while still reusing production refs for unchanged upstream nodes.
+
 ## Connection
 
 Defined in `~/.dbt/profiles.yml` (not in repo). Uses `DBT_PASSWORD` env var.
