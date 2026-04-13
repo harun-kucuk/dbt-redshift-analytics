@@ -75,7 +75,7 @@ Joined and enriched tables shared across multiple mart models.
 |---|---|
 | `safe_divide(n, d)` | Zero-safe division — returns 0 when denominator is 0 |
 | `test_is_positive(col)` | Generic test: asserts column values are > 0 |
-| `generate_schema_name` | Overrides dbt default — writes to exact schema names; prefixes `pr_<N>_` in CI |
+| `generate_schema_name` | Overrides dbt default — writes to exact schema names; prefixes `ci_pr_<N>_` in CI |
 
 ## Snapshots
 

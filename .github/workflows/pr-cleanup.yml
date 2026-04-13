@@ -45,6 +45,6 @@ jobs:
             done
           }
 
-          drop_schema "pr_${PR}_staging_tickit"
-          drop_schema "pr_${PR}_intermediate"
-          drop_schema "pr_${PR}_marts"
+          drop_schema "ci_pr_${PR}_staging_tickit"
+          drop_schema "ci_pr_${PR}_intermediate"
+          drop_schema "ci_pr_${PR}_marts"

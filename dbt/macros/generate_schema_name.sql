@@ -3,7 +3,7 @@
     {%- if custom_schema_name is none -%}
         {{ target.schema }}
     {%- elif pr_number != '' -%}
-        pr_{{ pr_number }}_{{ custom_schema_name | trim }}
+        ci_pr_{{ pr_number }}_{{ custom_schema_name | trim }}
     {%- else -%}
         {{ custom_schema_name | trim }}
     {%- endif -%}
