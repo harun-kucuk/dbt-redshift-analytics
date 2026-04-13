@@ -26,7 +26,7 @@ paths: ["terraform/**"]
 ## Variables
 - All configurable values go in `variables.tf` with descriptions and defaults
 - Secrets (e.g. `admin_password`) must be `sensitive = true`
-- Never hardcode secrets in `.tf` files — use `terraform.tfvars` (not committed)
+- Never hardcode secrets in `.tf` files — use `TF_VAR_<name>` environment variables instead
 
 ## Naming
 - Resource names use `var.workgroup_name` or `var.namespace_name` as prefix

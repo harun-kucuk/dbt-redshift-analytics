@@ -1,3 +1,7 @@
+---
+paths: [".github/workflows/**"]
+---
+
 # CI/CD Rules
 
 ## Active Workflows

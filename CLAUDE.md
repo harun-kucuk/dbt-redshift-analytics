@@ -12,6 +12,7 @@
 @.claude/rules/staging.md
 @.claude/rules/intermediate.md
 @.claude/rules/marts.md
+@.claude/rules/macros.md
 @.claude/rules/airflow.md
 @.claude/rules/terraform.md
 @.claude/rules/cicd.md
