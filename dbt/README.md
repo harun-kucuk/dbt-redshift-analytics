@@ -9,7 +9,7 @@ sample_data_dev.tickit
         │
         ▼
 ┌─────────────────────────────┐
-│  staging_tickit  (views)    │  Rename & cast — no logic
+│  staging_tickit  (tables)   │  Rename & cast — no logic
 │  stg_tickit__*              │
 └─────────────────────────────┘
         │
@@ -29,7 +29,7 @@ sample_data_dev.tickit
 ## Models
 
 ### Staging (`staging_tickit`)
-Late-binding views over `sample_data_dev.tickit`. One model per source table — rename columns and cast types only.
+Materialized tables over `sample_data_dev.tickit`. One model per source table — rename columns and cast types only.
 
 | Model | Source Table | Description |
 |---|---|---|
