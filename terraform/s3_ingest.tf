@@ -258,7 +258,7 @@ resource "null_resource" "redshift_autocopy_job" {
       "FROM 's3://${aws_s3_bucket.raw_ingest.bucket}/sales-feed/'",
       "IAM_ROLE '${aws_iam_role.redshift_s3_ingest.arn}'",
       "FORMAT AS CSV IGNOREHEADER 1 DELIMITER ','",
-      "JOB CREATE sales_feed_copy",
+      "JOB CREATE sales_feed_copy AUTO ON",
     ]))
   }
 
@@ -325,7 +325,7 @@ resource "null_resource" "redshift_autocopy_job" {
       done
 
       echo "Creating COPY JOB..."
-      SQL="COPY \"raw\".sales_feed FROM 's3://$BUCKET/sales-feed/' IAM_ROLE '$ROLE' FORMAT AS CSV IGNOREHEADER 1 DELIMITER ',' JOB CREATE sales_feed_copy"
+      SQL="COPY \"raw\".sales_feed FROM 's3://$BUCKET/sales-feed/' IAM_ROLE '$ROLE' FORMAT AS CSV IGNOREHEADER 1 DELIMITER ',' JOB CREATE sales_feed_copy AUTO ON"
 
       STMT_ID=$(aws redshift-data execute-statement \
         --workgroup-name "$WG" \
