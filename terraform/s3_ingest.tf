@@ -130,7 +130,6 @@ resource "null_resource" "redshift_s3_event_integration_prereqs" {
       BUCKET='${aws_s3_bucket.raw_ingest.bucket}'
       ACCOUNT='${data.aws_caller_identity.current.account_id}'
       NAMESPACE='${var.namespace_name}'
-      ROLE_ARN='${aws_iam_role.redshift_s3_ingest.arn}'
       PARTITION='${data.aws_partition.current.partition}'
       CALLER_ARN=$(aws sts get-caller-identity --region "$REGION" --query 'Arn' --output text)
       TARGET_ARN=$(aws redshift-serverless get-namespace \
@@ -254,15 +253,12 @@ resource "null_resource" "redshift_autocopy_job" {
     bucket           = aws_s3_bucket.raw_ingest.bucket
     iam_arn          = aws_iam_role.redshift_s3_ingest.arn
     integration_name = "${var.workgroup_name}-s3-sales-feed"
-    copy_sql_hash    = sha256(join("\n", [
-      "COPY \"raw\".sales_feed (sale_id, listing_id, seller_id, buyer_id, event_id, date_id, qty_sold, price_paid, commission, sale_at)",
+    copy_sql_hash    = sha256(join(" ", [
+      "COPY \"raw\".sales_feed",
       "FROM 's3://${aws_s3_bucket.raw_ingest.bucket}/sales-feed/'",
       "IAM_ROLE '${aws_iam_role.redshift_s3_ingest.arn}'",
-      "FORMAT AS CSV",
-      "IGNOREHEADER 1",
-      "DELIMITER ','",
+      "FORMAT AS CSV IGNOREHEADER 1 DELIMITER ','",
       "JOB CREATE sales_feed_copy",
-      "AUTO ON",
     ]))
   }
 
@@ -329,17 +325,7 @@ resource "null_resource" "redshift_autocopy_job" {
       done
 
       echo "Creating COPY JOB..."
-      SQL=$(cat <<SQL
-      COPY "raw".sales_feed (sale_id, listing_id, seller_id, buyer_id, event_id, date_id, qty_sold, price_paid, commission, sale_at)
-      FROM 's3://$BUCKET/sales-feed/'
-      IAM_ROLE '$ROLE'
-      FORMAT AS CSV
-      IGNOREHEADER 1
-      DELIMITER ','
-      JOB CREATE sales_feed_copy
-      AUTO ON
-      SQL
-      )
+      SQL="COPY \"raw\".sales_feed FROM 's3://$BUCKET/sales-feed/' IAM_ROLE '$ROLE' FORMAT AS CSV IGNOREHEADER 1 DELIMITER ',' JOB CREATE sales_feed_copy"
 
       STMT_ID=$(aws redshift-data execute-statement \
         --workgroup-name "$WG" \
@@ -357,8 +343,8 @@ resource "null_resource" "redshift_autocopy_job" {
       echo "Auto-copy is configured for s3://$BUCKET/sales-feed/."
       echo "Useful checks:"
       echo "  SELECT * FROM SYS_COPY_JOB;"
-      echo "  SELECT * FROM SYS_COPY_JOB_DETAIL WHERE job_name = 'sales_feed_copy';"
-      echo "  SELECT * FROM SVV_COPY_JOB_INTEGRATIONS;"
+      echo "  SELECT * FROM SYS_COPY_JOB_DETAIL WHERE job_id = (SELECT job_id FROM SYS_COPY_JOB WHERE job_name = 'sales_feed_copy');"
+      echo "  SELECT * FROM SVV_COPY_CONTINUOUS WHERE job_name = 'sales_feed_copy';"
     EOT
   }
 
