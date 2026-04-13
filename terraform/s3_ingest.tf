@@ -383,8 +383,8 @@ resource "null_resource" "redshift_autocopy_job" {
       echo "Auto-copy is configured for s3://$BUCKET/sales-feed/."
       echo "Useful checks:"
       echo "  SELECT * FROM SYS_COPY_JOB;"
-      echo "  SELECT * FROM SYS_COPY_JOB_DETAIL WHERE job_id = (SELECT job_id FROM SYS_COPY_JOB WHERE job_name = 'sales_feed_copy');"
-      echo "  SELECT * FROM SVV_COPY_CONTINUOUS WHERE job_name = 'sales_feed_copy';"
+      echo "  SELECT * FROM SYS_COPY_JOB_DETAIL WHERE job_name = 'sales_feed_copy';"
+      echo "  SELECT * FROM SVV_COPY_JOB_INTEGRATIONS;"
     EOT
   }
 
