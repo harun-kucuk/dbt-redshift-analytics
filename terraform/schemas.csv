@@ -3,4 +3,3 @@ staging_tickit,analytics
 intermediate,analytics
 marts,analytics
 snapshots,analytics
-dbt_artifacts,analytics

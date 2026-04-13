@@ -7,8 +7,8 @@ sources:
     tables:
       - name: sales
         description: Ticket sale transactions
-        loaded_at_field: saletime
         config:
+          loaded_at_field: saletime
           freshness:
             warn_after: {count: 25, period: hour}
             error_after: {count: 48, period: hour}
@@ -17,8 +17,8 @@ sources:
       - name: venue
       - name: listing
         description: Active ticket listings
-        loaded_at_field: listtime
         config:
+          loaded_at_field: listtime
           freshness:
             warn_after: {count: 25, period: hour}
             error_after: {count: 48, period: hour}
