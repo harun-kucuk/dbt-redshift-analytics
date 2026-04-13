@@ -53,12 +53,14 @@ jobs:
 
       - name: dbt Run
         env:
+          DBT_HOST: ${{ secrets.DBT_HOST }}
           DBT_PASSWORD: ${{ secrets.DBT_PASSWORD }}
           DBT_PR_NUMBER: ${{ github.event.pull_request.number }}
         run: dbt run --profiles-dir . --target ci --full-refresh
 
       - name: dbt Test
         env:
+          DBT_HOST: ${{ secrets.DBT_HOST }}
           DBT_PASSWORD: ${{ secrets.DBT_PASSWORD }}
           DBT_PR_NUMBER: ${{ github.event.pull_request.number }}
         run: dbt test --profiles-dir . --target ci

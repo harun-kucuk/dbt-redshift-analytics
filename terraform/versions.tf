@@ -12,11 +12,13 @@ terraform {
     }
   }
 
-  backend "s3" {
-    bucket = "redshift-infra-terraform-state-725960"
-    key    = "redshift-serverless/terraform.tfstate"
-    region = "eu-west-2"
-  }
+  # Backend config is supplied via -backend-config or a local backend.hcl (not committed).
+  # Example: terraform init -backend-config=backend.hcl
+  # backend.hcl:
+  #   bucket = "<your-state-bucket>"
+  #   key    = "redshift-serverless/terraform.tfstate"
+  #   region = "<your-region>"
+  backend "s3" {}
 }
 
 provider "aws" {

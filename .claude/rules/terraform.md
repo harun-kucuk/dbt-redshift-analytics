@@ -11,7 +11,7 @@ paths: ["terraform/**"]
 - `~/.dbt/profiles.yml` holds DB credentials — it lives outside the repo intentionally
 
 ## State
-- Backend: S3 bucket `redshift-infra-terraform-state-725960`, key `redshift-serverless/terraform.tfstate`, region `eu-west-2`
+- Backend: S3 bucket supplied via `backend.hcl` (not committed), key `redshift-serverless/terraform.tfstate`
 - Never commit `terraform.tfstate` or `terraform.tfstate.backup` locally
 
 ## Schemas

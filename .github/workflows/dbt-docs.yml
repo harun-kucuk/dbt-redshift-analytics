@@ -1,0 +1,68 @@
+name: dbt-docs
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "dbt/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    name: Generate dbt Docs
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: dbt
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dbt
+        run: pip install dbt-redshift==1.10.1
+
+      - name: dbt deps
+        run: dbt deps
+
+      - name: dbt compile
+        env:
+          DBT_HOST: ${{ secrets.DBT_HOST }}
+          DBT_PASSWORD: ${{ secrets.DBT_PASSWORD }}
+        run: dbt compile --profiles-dir . --target prod
+
+      - name: dbt docs generate
+        env:
+          DBT_HOST: ${{ secrets.DBT_HOST }}
+          DBT_PASSWORD: ${{ secrets.DBT_PASSWORD }}
+        run: dbt docs generate --profiles-dir . --target prod
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dbt/target
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: generate
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -34,12 +34,14 @@ jobs:
       - name: dbt Run
         id: dbt_run
         env:
+          DBT_HOST: ${{ secrets.DBT_HOST }}
           DBT_PASSWORD: ${{ secrets.DBT_PASSWORD }}
         run: dbt run --profiles-dir .
 
       - name: dbt Test
         id: dbt_test
         env:
+          DBT_HOST: ${{ secrets.DBT_HOST }}
           DBT_PASSWORD: ${{ secrets.DBT_PASSWORD }}
         run: dbt test --profiles-dir .
 

@@ -3,10 +3,11 @@
 *.pem
 *.key
 
-# Terraform state (managed in S3)
+# Terraform state and backend config (contain account-specific values)
 terraform/terraform.tfstate
 terraform/terraform.tfstate.backup
 terraform/.terraform/
+terraform/backend.hcl
 
 # dbt
 dbt/target/

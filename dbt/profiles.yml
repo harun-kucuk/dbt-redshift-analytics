@@ -3,9 +3,9 @@ analytics:
   outputs:
     prod:
       type: redshift
-      host: analytics.725960317874.eu-west-2.redshift-serverless.amazonaws.com
+      host: "{{ env_var('DBT_HOST') }}"
       port: 5439
-      user: admin
+      user: "{{ env_var('DBT_USER', 'admin') }}"
       password: "{{ env_var('DBT_PASSWORD') }}"
       dbname: analytics
       schema: public
@@ -15,11 +15,11 @@ analytics:
 
     ci:
       type: redshift
-      host: analytics.725960317874.eu-west-2.redshift-serverless.amazonaws.com
+      host: "{{ env_var('DBT_HOST') }}"
       port: 5439
-      user: admin
+      user: "{{ env_var('DBT_USER', 'admin') }}"
       password: "{{ env_var('DBT_PASSWORD') }}"
-      dbname: dev
+      dbname: analytics
       schema: public
       threads: 4
       connect_timeout: 30

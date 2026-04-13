@@ -10,7 +10,7 @@ Provisions all AWS infrastructure for the analytics platform.
 | Redshift Serverless Workgroup | `analytics`, 8 RPU, publicly accessible |
 | Security Group | Port 5439 restricted to `allowed_cidr_blocks` |
 | Redshift Schemas | Driven by `schemas.csv` — created via `aws redshift-data execute-statement` |
-| S3 Backend | `redshift-infra-terraform-state-725960` in `eu-west-2` |
+| S3 Backend | Supplied via `backend.hcl` (not committed) |
 
 ## Schema Management
 
