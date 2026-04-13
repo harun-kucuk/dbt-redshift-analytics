@@ -2,7 +2,7 @@ with source as (
     select * from {{ source('tickit', 'event') }}
 )
 
--- These are lightweight renames so downstream models can stay warehouse-agnostic.
+-- Lightweight renames keep downstream models warehouse-agnostic in CI and prod.
 select
     eventid         as event_id,
     venueid         as venue_id,

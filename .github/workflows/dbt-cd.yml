@@ -63,10 +63,10 @@ jobs:
             --profiles-dir . \
             --defer \
             --state state/prod \
-            --select @state:modified | tee /tmp/dbt_modified_nodes_cd.txt
+            --select state:modified+1 | tee /tmp/dbt_modified_nodes_cd.txt
 
           if [ ! -s /tmp/dbt_modified_nodes_cd.txt ]; then
-            echo "No modified dbt nodes detected by @state:modified."
+            echo "No modified dbt nodes detected by state:modified+1."
             exit 0
           fi
 
@@ -74,7 +74,7 @@ jobs:
             --profiles-dir . \
             --defer \
             --state state/prod \
-            --select @state:modified
+            --select state:modified+1
 
       - name: dbt Build Full Graph
         id: dbt_build_full
