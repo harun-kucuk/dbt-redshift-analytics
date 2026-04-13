@@ -1,0 +1,3 @@
+bucket = "<your-state-bucket-name>"
+key    = "redshift-serverless/terraform.tfstate"
+region = "<your-aws-region>"

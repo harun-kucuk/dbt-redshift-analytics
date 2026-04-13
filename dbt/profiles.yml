@@ -1,0 +1,26 @@
+analytics:
+  target: prod
+  outputs:
+    prod:
+      type: redshift
+      host: "{{ env_var('DBT_HOST') }}"
+      port: 5439
+      user: "{{ env_var('DBT_USER', 'admin') }}"
+      password: "{{ env_var('DBT_PASSWORD') }}"
+      dbname: analytics
+      schema: public
+      threads: 4
+      connect_timeout: 30
+      sslmode: require
+
+    ci:
+      type: redshift
+      host: "{{ env_var('DBT_HOST') }}"
+      port: 5439
+      user: "{{ env_var('DBT_USER', 'admin') }}"
+      password: "{{ env_var('DBT_PASSWORD') }}"
+      dbname: analytics
+      schema: public
+      threads: 4
+      connect_timeout: 30
+      sslmode: require

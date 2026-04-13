@@ -1,0 +1,50 @@
+name: pr-cleanup
+
+on:
+  pull_request:
+    branches: [main]
+    types: [closed]
+
+jobs:
+  drop-pr-schemas:
+    name: Drop PR schemas
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: eu-west-2
+
+    steps:
+      - name: Drop PR schemas
+        run: |
+          PR=${{ github.event.pull_request.number }}
+          WORKGROUP="analytics"
+          DB="dev"
+          REGION="eu-west-2"
+
+          drop_schema() {
+            SCHEMA=$1
+            echo "Dropping schema: $SCHEMA"
+            ID=$(aws redshift-data execute-statement \
+              --workgroup-name $WORKGROUP \
+              --database $DB \
+              --sql "DROP SCHEMA IF EXISTS ${SCHEMA} CASCADE" \
+              --region $REGION \
+              --query 'Id' --output text)
+
+            # Wait for statement to complete
+            for i in $(seq 1 10); do
+              STATUS=$(aws redshift-data describe-statement --id $ID --region $REGION --query 'Status' --output text)
+              echo "  status: $STATUS"
+              [ "$STATUS" = "FINISHED" ] && break
+              [ "$STATUS" = "FAILED" ] && echo "  ERROR: $(aws redshift-data describe-statement --id $ID --region $REGION --query 'Error' --output text)" && break
+              sleep 3
+            done
+          }
+
+          drop_schema "ci_pr_${PR}_staging_tickit"
+          drop_schema "ci_pr_${PR}_intermediate"
+          drop_schema "ci_pr_${PR}_marts"

@@ -1,0 +1,106 @@
+---
+x-airflow-common: &airflow-common
+  build:
+    context: .
+    dockerfile: Dockerfile
+  image: redshift-dbt-airflow:latest
+  environment: &airflow-common-env
+    AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+    AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW__CORE__FERNET_KEY}
+    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
+    AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+    AIRFLOW__CORE__DAG_DISCOVERY_SAFE_MODE: "false"
+    AIRFLOW__WEBSERVER__EXPOSE_CONFIG: "true"
+    # Redshift credentials — passed through from airflow/.env into containers.
+    # profiles.yml reads DBT_PASSWORD for local dbt runs; here they also feed
+    # the Airflow Redshift connection created by airflow-init below.
+    DBT_PASSWORD: ${DBT_PASSWORD}
+    REDSHIFT_HOST: ${REDSHIFT_HOST}
+    REDSHIFT_USER: ${REDSHIFT_USER}
+    SLACK_WEBHOOK_URL: ${SLACK_WEBHOOK_URL:-}
+  volumes:
+    - ./dags:/opt/airflow/dags
+    - ./logs:/opt/airflow/logs
+    - ./plugins:/opt/airflow/plugins
+    # Mount the dbt project so the DAG can reference models and write dbt_packages/
+    - ../dbt:/opt/airflow/dbt
+
+  env_file:
+    - .env
+  depends_on:
+    postgres:
+      condition: service_healthy
+
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - postgres-db-volume:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "airflow"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  airflow-webserver:
+    <<: *airflow-common
+    command: webserver
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  airflow-scheduler:
+    <<: *airflow-common
+    command: scheduler
+    healthcheck:
+      test: ["CMD", "airflow", "jobs", "check", "--job-type", "SchedulerJob", "--hostname", "$(hostname)"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  # One-time init: migrate DB, create admin user, register Redshift connection.
+  # Run with: docker compose up airflow-init
+  airflow-init:
+    <<: *airflow-common
+    entrypoint: /bin/bash
+    command:
+      - -c
+      - |
+        airflow db upgrade
+
+        airflow users create \
+          --username admin \
+          --firstname Admin \
+          --lastname User \
+          --role Admin \
+          --email admin@example.com \
+          --password admin
+
+        airflow connections add redshift_default \
+          --conn-type redshift \
+          --conn-login "$${REDSHIFT_USER}" \
+          --conn-password "$${DBT_PASSWORD}" \
+          --conn-host "$${REDSHIFT_HOST}" \
+          --conn-port 5439 \
+          --conn-schema analytics \
+          || echo "Connection redshift_default already exists, skipping."
+
+        echo "airflow-init complete."
+    restart: "no"
+
+volumes:
+  postgres-db-volume:

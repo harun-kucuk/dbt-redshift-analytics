@@ -1,0 +1,26 @@
+version: 2
+
+sources:
+  - name: tickit
+    database: sample_data_dev
+    schema: tickit
+    tables:
+      - name: sales
+        description: Ticket sale transactions
+        config:
+          loaded_at_field: saletime
+          freshness:
+            warn_after: {count: 25, period: hour}
+            error_after: {count: 48, period: hour}
+      - name: users
+      - name: event
+      - name: venue
+      - name: listing
+        description: Active ticket listings
+        config:
+          loaded_at_field: listtime
+          freshness:
+            warn_after: {count: 25, period: hour}
+            error_after: {count: 48, period: hour}
+      - name: category
+      - name: date

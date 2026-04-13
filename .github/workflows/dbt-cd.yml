@@ -1,0 +1,141 @@
+name: dbt-cd
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "dbt/**"
+      - ".github/workflows/dbt-cd.yml"
+
+env:
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  AWS_DEFAULT_REGION: eu-west-2
+
+jobs:
+  dbt-cd:
+    name: dbt Run
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: dbt
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dbt
+        id: install
+        run: pip install dbt-redshift==1.10.1
+
+      - name: dbt deps
+        id: deps
+        run: dbt deps
+
+      - name: Resolve dbt state location
+        id: state_bucket
+        run: |
+          ACCOUNT_ID=$(aws sts get-caller-identity --query 'Account' --output text)
+          echo "bucket=analytics-dbt-state-${ACCOUNT_ID}" >> "$GITHUB_OUTPUT"
+          mkdir -p state/prod
+
+      - name: Download latest prod manifest
+        id: download_manifest
+        run: |
+          if aws s3 cp "s3://${{ steps.state_bucket.outputs.bucket }}/artifacts/prod/manifest.json" state/prod/manifest.json; then
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "found=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: dbt Build Changed Nodes
+        id: dbt_build_changed
+        if: steps.download_manifest.outputs.found == 'true'
+        env:
+          DBT_HOST: ${{ secrets.DBT_HOST }}
+          DBT_PASSWORD: ${{ secrets.DBT_PASSWORD }}
+        run: |
+          dbt ls \
+            --profiles-dir . \
+            --defer \
+            --state state/prod \
+            --select state:modified+1 | tee /tmp/dbt_modified_nodes_cd.txt
+
+          if [ ! -s /tmp/dbt_modified_nodes_cd.txt ]; then
+            echo "No modified dbt nodes detected by state:modified+1."
+            exit 0
+          fi
+
+          dbt build \
+            --profiles-dir . \
+            --defer \
+            --state state/prod \
+            --select state:modified+1
+
+      - name: dbt Build Full Graph
+        id: dbt_build_full
+        if: steps.download_manifest.outputs.found != 'true'
+        env:
+          DBT_HOST: ${{ secrets.DBT_HOST }}
+          DBT_PASSWORD: ${{ secrets.DBT_PASSWORD }}
+        run: dbt build --profiles-dir .
+
+      - name: Upload latest prod manifest
+        id: upload_manifest
+        if: success()
+        run: aws s3 cp target/manifest.json "s3://${{ steps.state_bucket.outputs.bucket }}/artifacts/prod/manifest.json"
+
+      - name: Notify Slack on failure
+        if: failure()
+        working-directory: ${{ github.workspace }}
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+          BRANCH: ${{ github.ref_name }}
+          ACTOR: ${{ github.actor }}
+          COMMIT_SHA: ${{ github.sha }}
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          COMMIT_URL: ${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}
+          STEP_INSTALL: ${{ steps.install.outcome }}
+          STEP_DEPS: ${{ steps.deps.outcome }}
+          STEP_BUILD_CHANGED: ${{ steps.dbt_build_changed.outcome }}
+          STEP_BUILD_FULL: ${{ steps.dbt_build_full.outcome }}
+          STEP_UPLOAD_MANIFEST: ${{ steps.upload_manifest.outcome }}
+        run: |
+          python3 - <<'EOF'
+          import json, os, urllib.request
+
+          steps = {
+            "Install dbt":  os.environ["STEP_INSTALL"],
+            "dbt deps":     os.environ["STEP_DEPS"],
+            "dbt Build Changed Nodes": os.environ["STEP_BUILD_CHANGED"],
+            "dbt Build Full Graph":    os.environ["STEP_BUILD_FULL"],
+            "Upload manifest":         os.environ["STEP_UPLOAD_MANIFEST"],
+          }
+          failed_step = next((name for name, outcome in steps.items() if outcome == "failure"), "unknown")
+
+          payload = {
+            "attachments": [{
+              "color": "danger",
+              "title": ":x: dbt-cd failed",
+              "fields": [
+                {"title": "Failed step",  "value": failed_step,              "short": True},
+                {"title": "Triggered by", "value": os.environ["ACTOR"],      "short": True},
+                {"title": "Branch",       "value": os.environ["BRANCH"],     "short": True},
+                {"title": "Commit",       "value": f"<{os.environ['COMMIT_URL']}|{os.environ['COMMIT_SHA'][:7]}> {os.environ['COMMIT_MSG'].splitlines()[0]}", "short": True},
+              ],
+              "actions": [{"type": "button", "text": "View run", "url": os.environ["RUN_URL"]}]
+            }]
+          }
+          req = urllib.request.Request(
+            os.environ["SLACK_WEBHOOK"],
+            data=json.dumps(payload).encode(),
+            headers={"Content-Type": "application/json"}
+          )
+          urllib.request.urlopen(req)
+          EOF

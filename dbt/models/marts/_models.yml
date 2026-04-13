@@ -1,0 +1,218 @@
+version: 2
+
+models:
+  - name: fct_sales
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: fct_sale_sk
+        data_type: varchar
+        constraints:
+          - type: not_null
+        tests:
+          - unique
+          - not_null
+      - name: sale_id
+        data_type: integer
+        tests:
+          - unique
+          - not_null
+      - name: event_id
+        data_type: integer
+        tests:
+          - not_null
+      - name: buyer_id
+        data_type: integer
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_users')
+                field: user_id
+      - name: seller_id
+        data_type: integer
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_users')
+                field: user_id
+      - name: price_paid
+        data_type: numeric
+        tests:
+          - not_null
+          - is_positive
+      - name: net_revenue
+        data_type: numeric
+        tests:
+          - not_null
+          - is_positive
+      - name: category_group
+        data_type: varchar
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['Sports', 'Shows', 'Concerts']
+      - name: listing_id
+        data_type: integer
+      - name: quantity_sold
+        data_type: smallint
+      - name: commission
+        data_type: numeric
+      - name: commission_rate
+        data_type: numeric
+      - name: sale_at
+        data_type: timestamp
+      - name: sale_date
+        data_type: date
+      - name: sale_year
+        data_type: smallint
+      - name: sale_week
+        data_type: smallint
+      - name: is_holiday
+        data_type: boolean
+      - name: event_name
+        data_type: varchar
+      - name: event_start_at
+        data_type: timestamp
+      - name: category_id
+        data_type: smallint
+      - name: category_name
+        data_type: varchar
+      - name: venue_id
+        data_type: smallint
+      - name: venue_name
+        data_type: varchar
+      - name: venue_city
+        data_type: varchar
+      - name: venue_seats
+        data_type: integer
+
+  - name: dim_users
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: user_id
+        data_type: integer
+        constraints:
+          - type: not_null
+        tests:
+          - unique
+          - not_null
+      - name: total_purchases
+        data_type: bigint
+        constraints:
+          - type: not_null
+        tests:
+          - not_null
+      - name: total_spent
+        data_type: numeric
+        constraints:
+          - type: not_null
+        tests:
+          - not_null
+      - name: first_name
+        data_type: varchar
+      - name: last_name
+        data_type: varchar
+      - name: city
+        data_type: varchar
+      - name: likes_sports
+        data_type: boolean
+      - name: likes_theatre
+        data_type: boolean
+      - name: likes_concerts
+        data_type: boolean
+      - name: likes_broadway
+        data_type: boolean
+      - name: likes_musicals
+        data_type: boolean
+      - name: total_sales
+        data_type: bigint
+      - name: total_earned
+        data_type: numeric
+      - name: total_listings
+        data_type: bigint
+      - name: total_listed_value
+        data_type: numeric
+      - name: avg_ticket_price
+        data_type: numeric
+      - name: avg_order_value
+        data_type: numeric
+      - name: first_purchase_at
+        data_type: timestamp
+      - name: last_purchase_at
+        data_type: timestamp
+
+  - name: mart_sales_by_category
+    columns:
+      - name: category_name
+        tests:
+          - not_null
+      - name: sale_year
+        tests:
+          - not_null
+      - name: gross_revenue
+        tests:
+          - not_null
+      - name: net_revenue
+        tests:
+          - not_null
+
+  - name: mart_top_events
+    columns:
+      - name: event_id
+        tests:
+          - not_null
+      - name: event_name
+        tests:
+          - not_null
+      - name: gross_revenue
+        tests:
+          - is_positive
+      - name: net_revenue
+        tests:
+          - is_positive
+      - name: total_tickets_sold
+        tests:
+          - is_positive
+
+  - name: mart_venue_performance
+    columns:
+      - name: venue_id
+        tests:
+          - unique
+          - not_null
+      - name: venue_name
+        tests:
+          - not_null
+      - name: total_net_revenue
+        tests:
+          - is_positive
+
+  - name: mart_user_segments
+    columns:
+      - name: user_id
+        tests:
+          - unique
+          - not_null
+      - name: buyer_segment
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['VIP', 'Regular', 'Occasional', 'Inactive']
+      - name: seller_segment
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Power Seller', 'Active Seller', 'New Seller', 'Buyer Only']
+      - name: interest_segment
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Sports', 'Concerts', 'Shows', 'General']

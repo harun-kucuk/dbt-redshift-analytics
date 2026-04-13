@@ -1,0 +1,5 @@
+name,database
+staging_tickit,analytics
+intermediate,analytics
+marts,analytics
+snapshots,analytics
