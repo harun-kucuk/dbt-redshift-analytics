@@ -253,7 +253,7 @@ resource "null_resource" "redshift_autocopy_job" {
     bucket           = aws_s3_bucket.raw_ingest.bucket
     iam_arn          = aws_iam_role.redshift_s3_ingest.arn
     integration_name = "${var.workgroup_name}-s3-sales-feed"
-    copy_sql_hash    = sha256(join("\n", [
+    copy_sql_hash = sha256(join("\n", [
       "COPY \"raw\".sales_feed (sale_id, listing_id, seller_id, buyer_id, event_id, date_id, qty_sold, price_paid, commission, sale_at)",
       "FROM 's3://${aws_s3_bucket.raw_ingest.bucket}/sales-feed/'",
       "IAM_ROLE '${aws_iam_role.redshift_s3_ingest.arn}'",

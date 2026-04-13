@@ -1,6 +1,15 @@
 # dbt Redshift Analytics
 
-A portfolio analytics project using **dbt**, **AWS Redshift Serverless**, **Terraform**, and **Apache Airflow**. Transforms the Redshift TICKIT sample dataset through a layered data model into analytics-ready tables, orchestrated with Cosmos DAGs.
+A portfolio analytics engineering project using **dbt**, **AWS Redshift Serverless**, **Terraform**, and **Apache Airflow**. It transforms the Redshift TICKIT sample dataset into analytics-ready models, provisions infrastructure as code, and demonstrates both batch transformation and event-driven ingestion patterns.
+
+## What This Repo Demonstrates
+
+- a layered dbt project on Redshift Serverless
+- Terraform-managed warehouse, security, and S3 infrastructure
+- event-driven S3 to Redshift ingestion with `COPY JOB` auto-copy
+- state-aware dbt CI/CD using `defer` and `state:modified+1`
+- Airflow orchestration with Cosmos and Slack failure notifications
+- practical tradeoffs, runbooks, and portfolio-grade documentation
 
 ## Stack
 
@@ -12,7 +21,7 @@ A portfolio analytics project using **dbt**, **AWS Redshift Serverless**, **Terr
 | Terraform | Infrastructure as code |
 | Apache Airflow 2.10 + Cosmos 1.14 | Pipeline orchestration |
 | SQLFluff 3.3.1 | SQL linting (jinja templater, ansi dialect) |
-| S3 | Terraform remote state |
+| S3 | Terraform remote state, dbt state artifacts, auto-copy landing zone |
 | GitHub Actions | CI/CD for dbt and Terraform |
 
 ## Architecture
@@ -22,8 +31,8 @@ sample_data_dev.tickit  (Redshift built-in sample)
         │
         ▼
 ┌─────────────────────────────┐
-│  staging_tickit  (views)    │  Rename & cast — no logic
-│  stg_tickit__*              │  Late-binding (bind: false)
+│  staging_tickit  (tables)   │  Rename & cast — no logic
+│  stg_tickit__*              │  Materialized as tables for Redshift compatibility
 └─────────────────────────────┘
         │
         ▼
@@ -36,6 +45,23 @@ sample_data_dev.tickit  (Redshift built-in sample)
 ┌─────────────────────────────┐
 │  marts  (tables)            │  Analytics-ready: facts, dims, aggregates
 │  fct_*  dim_*  mart_*       │  Contracts enforced on fct_sales, dim_users
+└─────────────────────────────┘
+        │
+        ▼
+┌─────────────────────────────┐
+│  S3 landing zone            │  Event-driven ingest for raw CSV files
+│  sales-feed/                │
+└─────────────────────────────┘
+        │
+        ▼
+┌─────────────────────────────┐
+│  Redshift COPY JOB          │  Auto-copy from S3 into raw.sales_feed
+│  sales_feed_copy            │
+└─────────────────────────────┘
+        │
+        ▼
+┌─────────────────────────────┐
+│  raw.sales_feed             │  Operational landing table with loaded_at
 └─────────────────────────────┘
         │
         ▼
@@ -102,13 +128,31 @@ All DAGs send a Slack alert on failure via `SLACK_WEBHOOK_URL` env var (graceful
 
 | Workflow | Trigger | Actions |
 |---|---|---|
-| `dbt-ci` | PR touching `dbt/**` | SQLFluff lint → `dbt run` + `dbt test` on `dev` with PR-isolated schemas |
-| `dbt-cd` | Merge to `main` on `dbt/**` | `dbt run` + `dbt test` on `analytics` (prod) |
+| `dbt-ci` | PR touching `dbt/**` or dbt workflow config | SQLFluff lint → download latest prod `manifest.json` from S3 → `dbt build --defer --state state/prod --select state:modified+1` in PR-isolated schemas |
+| `dbt-cd` | Merge to `main` on `dbt/**` or dbt workflow config | Download latest prod manifest → build modified nodes plus the graph context their downstream models need → upload fresh `manifest.json` back to S3 |
 | `terraform-ci` | PR touching `terraform/**` | `terraform plan`, posts plan as PR comment |
 | `terraform-cd` | Merge to `main` on `terraform/**` | `terraform apply` |
-| `pr-cleanup` | PR closed | Drops `pr_<N>_*` schemas from dev DB |
+| `pr-cleanup` | PR closed | Drops `ci_pr_<N>_*` schemas from dev DB |
 
 `dbt-cd` and `terraform-cd` post a Slack alert on failure showing the failed step, branch, commit, and a direct link to the run.
+
+### CI Schema Naming
+
+dbt CI runs in isolated schemas shaped like:
+
+```text
+ci_pr_<PR_NUMBER>_staging_tickit
+ci_pr_<PR_NUMBER>_intermediate
+ci_pr_<PR_NUMBER>_marts
+```
+
+Example:
+
+```text
+ci_pr_9_staging_tickit
+```
+
+This keeps PR validation separate from production schemas while still letting CI use the shared `dev` database.
 
 ![GitHub Actions Slack alert](docs/images/slack_github.png)
 
@@ -122,10 +166,28 @@ AWS
 │   ├── Namespace: analytics
 │   └── Workgroup: analytics (8 RPU, eu-west-2)
 ├── Security Group: public endpoint with CIDR allowlist
-└── S3: terraform remote state
+├── S3: terraform remote state
+├── S3: dbt state bucket for latest prod manifest
+└── S3: raw ingest bucket for Redshift auto-copy
 ```
 
 See [ADR 003](docs/decisions/003-redshift-serverless-over-provisioned.md) for why Serverless was chosen over a provisioned cluster.
+
+### Event-Driven Ingestion
+
+Terraform provisions a raw ingest bucket and configures a Redshift S3 event integration plus `COPY JOB` so files dropped into:
+
+```text
+s3://<raw_ingest_bucket>/sales-feed/
+```
+
+are loaded automatically into:
+
+```text
+raw.sales_feed
+```
+
+The landing table includes a `loaded_at` audit column so ingestion freshness can be queried directly in Redshift.
 
 ## Getting Started
 
@@ -171,12 +233,27 @@ make lint        # check all models, macros, and tests
 make lint-fix    # auto-correct where possible
 ```
 
+### 6. Test The Auto-Copy Flow
+
+```bash
+aws s3 cp terraform/sample_sales_feed.csv \
+  s3://<raw_ingest_bucket>/sales-feed/sample_sales_feed.csv
+```
+
+Useful verification queries:
+
+```sql
+select * from sys_copy_job;
+select * from sys_copy_job_detail where job_name = 'sales_feed_copy';
+select * from "raw".sales_feed order by loaded_at desc;
+```
+
 ## Project Structure
 
 ```
 ├── dbt/
 │   ├── models/
-│   │   ├── staging/         stg_tickit__* late-binding views
+│   │   ├── staging/         stg_tickit__* renamed source tables
 │   │   ├── intermediate/    int_* joined & enriched tables
 │   │   └── marts/           fct_* dim_* mart_* analytics tables
 │   ├── macros/              safe_divide, test_is_positive, generate_schema_name
@@ -222,3 +299,17 @@ See [docs/runbook.md](docs/runbook.md) for:
 - Schema change procedures
 - Redshift connection troubleshooting
 - Useful diagnostic queries
+
+## Portfolio Notes
+
+This repo intentionally shows a few real-world tradeoffs instead of hiding them:
+
+- Redshift auto-copy is implemented with Terraform plus CLI-driven `null_resource` steps because not every Redshift object is easily modeled as a first-class Terraform resource.
+- CI uses `defer` and dbt state artifacts to stay fast and realistic, but the first run falls back to a full build until a production manifest exists in S3.
+- Some Redshift sample-data patterns, especially around late-binding views and cross-database references, can behave differently in isolated CI schemas than they do in prod.
+
+If I were extending this project further, the next improvements would be:
+
+- add a first-class smoke-test workflow for the dbt state/defer path
+- capture source file metadata in `raw.sales_feed` for stronger ingest lineage
+- reduce shell-driven Redshift reconciliation in Terraform where provider support improves

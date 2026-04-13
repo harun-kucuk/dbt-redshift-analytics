@@ -2,6 +2,7 @@ with source as (
     select * from {{ source('tickit', 'venue') }}
 )
 
+-- Preserve venue grain and a consistent venue shape for downstream models.
 select
     venueid         as venue_id,
     venuename       as venue_name,

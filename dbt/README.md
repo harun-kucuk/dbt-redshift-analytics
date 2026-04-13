@@ -9,7 +9,7 @@ sample_data_dev.tickit
         │
         ▼
 ┌─────────────────────────────┐
-│  staging_tickit  (views)    │  Rename & cast — no logic
+│  staging_tickit  (tables)   │  Rename & cast — no logic
 │  stg_tickit__*              │
 └─────────────────────────────┘
         │
@@ -29,7 +29,7 @@ sample_data_dev.tickit
 ## Models
 
 ### Staging (`staging_tickit`)
-Late-binding views over `sample_data_dev.tickit`. One model per source table — rename columns and cast types only.
+Materialized tables over `sample_data_dev.tickit`. One model per source table — rename columns and cast types only.
 
 | Model | Source Table | Description |
 |---|---|---|
@@ -75,7 +75,7 @@ Joined and enriched tables shared across multiple mart models.
 |---|---|
 | `safe_divide(n, d)` | Zero-safe division — returns 0 when denominator is 0 |
 | `test_is_positive(col)` | Generic test: asserts column values are > 0 |
-| `generate_schema_name` | Overrides dbt default — writes to exact schema names; prefixes `pr_<N>_` in CI |
+| `generate_schema_name` | Overrides dbt default — writes to exact schema names; prefixes `ci_pr_<N>_` in CI |
 
 ## Snapshots
 
@@ -106,6 +106,25 @@ dbt test                           # all tests
 dbt snapshot                       # run snapshots
 dbt docs generate && dbt docs serve
 ```
+
+## CI Behavior
+
+GitHub Actions uses the latest production `manifest.json` from S3 to keep pull request runs focused and fast.
+
+- CI downloads `s3://<dbt_state_bucket>/artifacts/prod/manifest.json`
+- PR runs use `--defer --state state/prod --select state:modified+1`
+- CI schemas are prefixed as `ci_pr_<N>_...`
+- when no prior manifest exists, workflows fall back to a full `dbt build`
+
+Example CI schema names:
+
+```text
+ci_pr_9_staging_tickit
+ci_pr_9_intermediate
+ci_pr_9_marts
+```
+
+This approach keeps PR runs isolated while still reusing production refs for unchanged upstream nodes.
 
 ## Connection
 
