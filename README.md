@@ -31,8 +31,8 @@ sample_data_dev.tickit  (Redshift built-in sample)
         │
         ▼
 ┌─────────────────────────────┐
-│  staging_tickit  (views)    │  Rename & cast — no logic
-│  stg_tickit__*              │  Late-binding (bind: false)
+│  staging_tickit  (tables)   │  Rename & cast — no logic
+│  stg_tickit__*              │  Materialized as tables for Redshift compatibility
 └─────────────────────────────┘
         │
         ▼
@@ -253,7 +253,7 @@ select * from "raw".sales_feed order by loaded_at desc;
 ```
 ├── dbt/
 │   ├── models/
-│   │   ├── staging/         stg_tickit__* late-binding views
+│   │   ├── staging/         stg_tickit__* renamed source tables
 │   │   ├── intermediate/    int_* joined & enriched tables
 │   │   └── marts/           fct_* dim_* mart_* analytics tables
 │   ├── macros/              safe_divide, test_is_positive, generate_schema_name
