@@ -44,6 +44,7 @@ resource "aws_redshiftserverless_namespace" "this" {
   db_name             = var.db_name
   admin_username      = var.admin_username
   admin_user_password = var.admin_password
+  iam_roles           = [aws_iam_role.redshift_s3_ingest.arn]
 
   tags = {
     Project = "dbt-redshift-analytics"
