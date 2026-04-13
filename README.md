@@ -28,6 +28,8 @@ A portfolio analytics engineering project using **dbt**, **AWS Redshift Serverle
 | SQLFluff 3.3.1 | SQL linting (jinja templater, ansi dialect) |
 | S3 | Terraform remote state, dbt state artifacts, auto-copy landing zone |
 | GitHub Actions | CI/CD for dbt and Terraform |
+| SQL | dbt models, tests, macros, and Redshift DDL |
+| Python | Airflow DAGs and CI Slack notification scripts |
 
 ## Architecture
 

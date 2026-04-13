@@ -3,9 +3,10 @@
 *.pem
 *.key
 
-# IDE and local Claude config (may contain credentials)
+# IDE and local settings (may contain credentials)
 .vscode/
-.claude/
+.claude/settings.local.json
+.claude/settings.json
 
 # Terraform state and backend config (contain account-specific values)
 terraform/terraform.tfstate

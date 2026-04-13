@@ -14,6 +14,7 @@
 @.claude/rules/marts.md
 @.claude/rules/airflow.md
 @.claude/rules/terraform.md
+@.claude/rules/cicd.md
 
 ## Naming Conventions
 
@@ -70,4 +71,4 @@ docker compose down                             # stop all services
 - `airflow/dags/common.py` — shared Cosmos config (profile, execution, project)
 - `airflow/docker-compose.yml` — Airflow service definitions
 - `terraform/schemas.csv` — source of truth for schema names
-- `.github/workflows/` — dbt-ci, dbt-cd, terraform-ci, terraform-cd, pr-cleanup
+- `.github/workflows/` — dbt-ci, dbt-cd, dbt-docs, pr-cleanup (terraform-ci and terraform-cd are disabled; trigger manually via `workflow_dispatch` if needed)
