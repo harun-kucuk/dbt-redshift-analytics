@@ -5,6 +5,12 @@ on:
     branches: [main]
     paths:
       - "dbt/**"
+      - ".github/workflows/dbt-cd.yml"
+
+env:
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  AWS_DEFAULT_REGION: eu-west-2
 
 jobs:
   dbt-cd:
@@ -31,17 +37,56 @@ jobs:
         id: deps
         run: dbt deps
 
-      - name: dbt Run
-        id: dbt_run
-        env:
-          DBT_PASSWORD: ${{ secrets.DBT_PASSWORD }}
-        run: dbt run --profiles-dir .
+      - name: Resolve dbt state location
+        id: state_bucket
+        run: |
+          ACCOUNT_ID=$(aws sts get-caller-identity --query 'Account' --output text)
+          echo "bucket=analytics-dbt-state-${ACCOUNT_ID}" >> "$GITHUB_OUTPUT"
+          mkdir -p state/prod
 
-      - name: dbt Test
-        id: dbt_test
+      - name: Download latest prod manifest
+        id: download_manifest
+        run: |
+          if aws s3 cp "s3://${{ steps.state_bucket.outputs.bucket }}/artifacts/prod/manifest.json" state/prod/manifest.json; then
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "found=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: dbt Build Changed Nodes
+        id: dbt_build_changed
+        if: steps.download_manifest.outputs.found == 'true'
         env:
           DBT_PASSWORD: ${{ secrets.DBT_PASSWORD }}
-        run: dbt test --profiles-dir .
+        run: |
+          dbt ls \
+            --profiles-dir . \
+            --defer \
+            --state state/prod \
+            --select @state:modified | tee /tmp/dbt_modified_nodes_cd.txt
+
+          if [ ! -s /tmp/dbt_modified_nodes_cd.txt ]; then
+            echo "No modified dbt nodes detected by @state:modified."
+            exit 0
+          fi
+
+          dbt build \
+            --profiles-dir . \
+            --defer \
+            --state state/prod \
+            --select @state:modified
+
+      - name: dbt Build Full Graph
+        id: dbt_build_full
+        if: steps.download_manifest.outputs.found != 'true'
+        env:
+          DBT_PASSWORD: ${{ secrets.DBT_PASSWORD }}
+        run: dbt build --profiles-dir .
+
+      - name: Upload latest prod manifest
+        id: upload_manifest
+        if: success()
+        run: aws s3 cp target/manifest.json "s3://${{ steps.state_bucket.outputs.bucket }}/artifacts/prod/manifest.json"
 
       - name: Notify Slack on failure
         if: failure()
@@ -56,8 +101,9 @@ jobs:
           COMMIT_URL: ${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}
           STEP_INSTALL: ${{ steps.install.outcome }}
           STEP_DEPS: ${{ steps.deps.outcome }}
-          STEP_RUN: ${{ steps.dbt_run.outcome }}
-          STEP_TEST: ${{ steps.dbt_test.outcome }}
+          STEP_BUILD_CHANGED: ${{ steps.dbt_build_changed.outcome }}
+          STEP_BUILD_FULL: ${{ steps.dbt_build_full.outcome }}
+          STEP_UPLOAD_MANIFEST: ${{ steps.upload_manifest.outcome }}
         run: |
           python3 - <<'EOF'
           import json, os, urllib.request
@@ -65,8 +111,9 @@ jobs:
           steps = {
             "Install dbt":  os.environ["STEP_INSTALL"],
             "dbt deps":     os.environ["STEP_DEPS"],
-            "dbt Run":      os.environ["STEP_RUN"],
-            "dbt Test":     os.environ["STEP_TEST"],
+            "dbt Build Changed Nodes": os.environ["STEP_BUILD_CHANGED"],
+            "dbt Build Full Graph":    os.environ["STEP_BUILD_FULL"],
+            "Upload manifest":         os.environ["STEP_UPLOAD_MANIFEST"],
           }
           failed_step = next((name for name, outcome in steps.items() if outcome == "failure"), "unknown")
 

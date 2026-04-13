@@ -17,7 +17,7 @@ models:
     staging:
       +schema: staging_tickit
       +materialized: view
-      +bind: false
+      +bind: "{{ target.name != 'ci' }}"
     intermediate:
       +schema: intermediate
       +materialized: table

@@ -27,3 +27,13 @@ output "raw_ingest_s3_prefix" {
   description = "S3 prefix monitored by the sales_feed auto copy job"
   value       = "s3://${aws_s3_bucket.raw_ingest.bucket}/sales-feed/"
 }
+
+output "dbt_state_bucket" {
+  description = "S3 bucket that stores dbt state artifacts such as the latest manifest.json"
+  value       = aws_s3_bucket.dbt_state.bucket
+}
+
+output "dbt_state_manifest_s3_uri" {
+  description = "S3 URI for the latest production dbt manifest"
+  value       = "s3://${aws_s3_bucket.dbt_state.bucket}/artifacts/prod/manifest.json"
+}
