@@ -253,12 +253,15 @@ resource "null_resource" "redshift_autocopy_job" {
     bucket           = aws_s3_bucket.raw_ingest.bucket
     iam_arn          = aws_iam_role.redshift_s3_ingest.arn
     integration_name = "${var.workgroup_name}-s3-sales-feed"
-    copy_sql_hash    = sha256(join(" ", [
-      "COPY \"raw\".sales_feed",
+    copy_sql_hash    = sha256(join("\n", [
+      "COPY \"raw\".sales_feed (sale_id, listing_id, seller_id, buyer_id, event_id, date_id, qty_sold, price_paid, commission, sale_at)",
       "FROM 's3://${aws_s3_bucket.raw_ingest.bucket}/sales-feed/'",
       "IAM_ROLE '${aws_iam_role.redshift_s3_ingest.arn}'",
-      "FORMAT AS CSV IGNOREHEADER 1 DELIMITER ','",
-      "JOB CREATE sales_feed_copy AUTO ON",
+      "FORMAT AS CSV",
+      "IGNOREHEADER 1",
+      "DELIMITER ','",
+      "JOB CREATE sales_feed_copy",
+      "AUTO ON",
     ]))
   }
 
@@ -324,14 +327,51 @@ resource "null_resource" "redshift_autocopy_job" {
         sleep 5
       done
 
-      echo "Creating COPY JOB..."
-      SQL="COPY \"raw\".sales_feed FROM 's3://$BUCKET/sales-feed/' IAM_ROLE '$ROLE' FORMAT AS CSV IGNOREHEADER 1 DELIMITER ',' JOB CREATE sales_feed_copy AUTO ON"
+      COPY_SQL=$(cat <<SQL
+      COPY "raw".sales_feed (sale_id, listing_id, seller_id, buyer_id, event_id, date_id, qty_sold, price_paid, commission, sale_at)
+      FROM 's3://$BUCKET/sales-feed/'
+      IAM_ROLE '$ROLE'
+      FORMAT AS CSV
+      IGNOREHEADER 1
+      DELIMITER ','
+      JOB CREATE sales_feed_copy
+      AUTO ON
+      SQL
+      )
 
+      CURRENT_COPY_SQL=$(aws redshift-data execute-statement \
+        --workgroup-name "$WG" \
+        --database "$DB" \
+        --region "$REGION" \
+        --sql "SELECT copy_query FROM sys_copy_job WHERE job_name = 'sales_feed_copy'" \
+        --query "Id" \
+        --output text)
+
+      if wait_stmt "$CURRENT_COPY_SQL" >/dev/null 2>&1; then
+        EXISTING_SQL=$(aws redshift-data get-statement-result \
+          --id "$CURRENT_COPY_SQL" \
+          --region "$REGION" \
+          --query "Records[0][0].stringValue" \
+          --output text)
+        if [ "$EXISTING_SQL" != "None" ] && [ -n "$EXISTING_SQL" ] && [ "$EXISTING_SQL" != "$COPY_SQL" ]; then
+          echo "COPY JOB definition changed; dropping existing job..."
+          DROP_ID=$(aws redshift-data execute-statement \
+            --workgroup-name "$WG" \
+            --database "$DB" \
+            --region "$REGION" \
+            --sql "COPY JOB DROP sales_feed_copy" \
+            --query "Id" \
+            --output text)
+          wait_stmt "$DROP_ID" || { echo "Failed to drop existing COPY JOB"; exit 1; }
+        fi
+      fi
+
+      echo "Creating COPY JOB..."
       STMT_ID=$(aws redshift-data execute-statement \
         --workgroup-name "$WG" \
         --database "$DB" \
         --region "$REGION" \
-        --sql "$SQL" \
+        --sql "$COPY_SQL" \
         --query "Id" \
         --output text)
 
