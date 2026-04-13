@@ -5,6 +5,12 @@ on:
     branches: [main]
     paths:
       - "dbt/**"
+      - ".github/workflows/dbt-ci.yml"
+
+env:
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  AWS_DEFAULT_REGION: eu-west-2
 
 jobs:
   sqlfluff:
@@ -51,14 +57,61 @@ jobs:
       - name: dbt deps
         run: dbt deps
 
-      - name: dbt Run
-        env:
-          DBT_PASSWORD: ${{ secrets.DBT_PASSWORD }}
-          DBT_PR_NUMBER: ${{ github.event.pull_request.number }}
-        run: dbt run --profiles-dir . --target ci --full-refresh
+      - name: Resolve dbt state location
+        id: state_bucket
+        run: |
+          ACCOUNT_ID=$(aws sts get-caller-identity --query 'Account' --output text)
+          echo "bucket=analytics-dbt-state-${ACCOUNT_ID}" >> "$GITHUB_OUTPUT"
+          mkdir -p state/prod
 
-      - name: dbt Test
+      - name: Download latest prod manifest
+        id: download_manifest
+        run: |
+          if aws s3 cp "s3://${{ steps.state_bucket.outputs.bucket }}/artifacts/prod/manifest.json" state/prod/manifest.json; then
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "found=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: List modified nodes
+        if: steps.download_manifest.outputs.found == 'true'
+        id: modified_nodes
         env:
           DBT_PASSWORD: ${{ secrets.DBT_PASSWORD }}
           DBT_PR_NUMBER: ${{ github.event.pull_request.number }}
-        run: dbt test --profiles-dir . --target ci
+        run: |
+          dbt ls \
+            --profiles-dir . \
+            --target ci \
+            --defer \
+            --state state/prod \
+            --select state:modified+ | tee /tmp/dbt_modified_nodes_ci.txt
+          if [ -s /tmp/dbt_modified_nodes_ci.txt ]; then
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "found=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: dbt Build Changed Nodes
+        if: steps.download_manifest.outputs.found == 'true' && steps.modified_nodes.outputs.found == 'true'
+        env:
+          DBT_PASSWORD: ${{ secrets.DBT_PASSWORD }}
+          DBT_PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          dbt build \
+            --profiles-dir . \
+            --target ci \
+            --defer \
+            --state state/prod \
+            --select state:modified+
+
+      - name: No modified nodes
+        if: steps.download_manifest.outputs.found == 'true' && steps.modified_nodes.outputs.found != 'true'
+        run: echo "No modified dbt nodes detected by state:modified+."
+
+      - name: dbt Build Full Graph
+        if: steps.download_manifest.outputs.found != 'true'
+        env:
+          DBT_PASSWORD: ${{ secrets.DBT_PASSWORD }}
+          DBT_PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: dbt build --profiles-dir . --target ci
