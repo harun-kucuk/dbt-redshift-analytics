@@ -128,7 +128,7 @@ All DAGs send a Slack alert on failure via `SLACK_WEBHOOK_URL` env var (graceful
 
 | Workflow | Trigger | Actions |
 |---|---|---|
-| `dbt-ci` | PR touching `dbt/**` or dbt workflow config | SQLFluff lint → download latest prod `manifest.json` from S3 → `dbt build --defer --state state/prod --select @state:modified` in PR-isolated schemas |
+| `dbt-ci` | PR touching `dbt/**` or dbt workflow config | SQLFluff lint → download latest prod `manifest.json` from S3 → `dbt build --defer --state state/prod --select state:modified+1` in PR-isolated schemas |
 | `dbt-cd` | Merge to `main` on `dbt/**` or dbt workflow config | Download latest prod manifest → build modified nodes plus the graph context their downstream models need → upload fresh `manifest.json` back to S3 |
 | `terraform-ci` | PR touching `terraform/**` | `terraform plan`, posts plan as PR comment |
 | `terraform-cd` | Merge to `main` on `terraform/**` | `terraform apply` |

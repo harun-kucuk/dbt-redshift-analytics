@@ -112,7 +112,7 @@ dbt docs generate && dbt docs serve
 GitHub Actions uses the latest production `manifest.json` from S3 to keep pull request runs focused and fast.
 
 - CI downloads `s3://<dbt_state_bucket>/artifacts/prod/manifest.json`
-- PR runs use `--defer --state state/prod --select @state:modified`
+- PR runs use `--defer --state state/prod --select state:modified+1`
 - CI schemas are prefixed as `ci_pr_<N>_...`
 - when no prior manifest exists, workflows fall back to a full `dbt build`
 
