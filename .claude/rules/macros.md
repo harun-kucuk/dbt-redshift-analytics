@@ -32,4 +32,4 @@ Do not change the `ci_pr_` prefix logic — CI schema cleanup (`pr-cleanup` work
 ## Adding a New Macro
 - One file per macro in `dbt/macros/`
 - Name the file and macro identically
-- Add to this file if it introduces a usage contract other models must follow
+- If it introduces a usage contract other models must follow, document it in `.claude/rules/macros.md`

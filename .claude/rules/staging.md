@@ -5,7 +5,7 @@ paths: ["dbt/models/staging/**"]
 # Staging Layer Rules
 
 Schema: `staging_tickit`
-Materialization: `view` (late-binding, `bind: false`)
+Materialization: `view` with `bind: false` — set in `dbt/dbt_project.yml`, not in the SQL file
 Naming: `stg_<source>__<table>`
 
 ## Allowed

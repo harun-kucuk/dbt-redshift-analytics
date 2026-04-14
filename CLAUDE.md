@@ -57,10 +57,15 @@ docker compose down                             # stop all services
 
 ## Git Workflow
 
-- **Never commit directly to `main`** — always create a feature branch first
-- Branch naming: `feature/<short-description>` (e.g. `feature/add-venue-model`, `feature/fix-incremental-logic`)
-- One PR per logical change; keep PRs focused
-- Commit the fix before opening the PR; push the branch then open with `gh pr create`
+Never commit directly to `main`. Use `/feature`, `/pr`, and `/sync` commands.
+
+## Claude Skills
+
+| Skill | What it does |
+|---|---|
+| `/new-model [layer entity description]` | Scaffold a new dbt model + YAML tests |
+| `/pr` | Commit, push, and open a PR |
+| `/fix-sqlfluff` | Fix all SQLFluff linting violations |
 
 ## Key Files
 - `dbt/dbt_project.yml` — layer materializations and schema assignments
