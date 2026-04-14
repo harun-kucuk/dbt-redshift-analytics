@@ -16,7 +16,8 @@ models:
   analytics:
     staging:
       +schema: staging_tickit
-      +materialized: table
+      +materialized: view
+      +bind: false
     intermediate:
       +schema: intermediate
       +materialized: table
