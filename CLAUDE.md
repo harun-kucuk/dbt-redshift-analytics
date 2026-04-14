@@ -17,17 +17,6 @@
 @.claude/rules/terraform.md
 @.claude/rules/cicd.md
 
-## Naming Conventions
-
-| Layer | Pattern | Example |
-|---|---|---|
-| Staging | `stg_<source>__<table>` | `stg_tickit__sales` |
-| Intermediate | `int_<entity>_<verb>` | `int_sales_enriched` |
-| Fact | `fct_<entity>` | `fct_sales` |
-| Dimension | `dim_<entity>` | `dim_users` |
-| Aggregate mart | `mart_<topic>` | `mart_sales_by_category` |
-| Airflow DAG | `tickit_dbt_<scope>` | `tickit_dbt_daily` |
-
 ## Schema Management
 Schemas are defined in `terraform/schemas.csv` (columns: `name`, `database`).
 To add a schema: add a row and run `terraform apply` from `terraform/`.
@@ -57,7 +46,7 @@ docker compose down                             # stop all services
 
 ## Git Workflow
 
-Never commit directly to `main`. Use `/feature`, `/pr`, and `/sync` commands.
+Never commit directly to `main`. Always work on a `feature/<name>` branch and use `/pr` to open pull requests.
 
 ## Claude Skills
 
